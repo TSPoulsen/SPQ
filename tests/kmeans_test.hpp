@@ -1,10 +1,7 @@
 #pragma once
 
 #include "catch.hpp"
-#include "/dataset.hpp"
-#include "puffinn/kmeans.hpp"
-#include "puffinn/format/real_vector.hpp"
-
+/*
 #include <vector>
 #include <iostream>
 #include <set>
@@ -380,3 +377,4 @@ namespace kmeans {
     }
 #endif
 }
+*/

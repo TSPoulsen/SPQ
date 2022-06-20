@@ -21,13 +21,6 @@ namespace PQ {
 
     using data_t = std::vector<std::vector<float>>;
 
-    enum LossType {
-        euclidean,
-        inner_product,
-        weighted_inner_product // Will become anisotropic loss functions
-    }; 
-
-
     class ILoss {
     public:
         // Default is to not pad
@@ -62,11 +55,15 @@ namespace PQ {
 
 #ifdef __AVX2__
     #include <immintrin.h>
-    float inner_product(const float *v1, const float *v2, const size_t size) const
+    float inner_product(const float *v1, const float *v2, const size_t size)
     {
         __m256 sum = _mm256_setzero_ps();
+        std::cout << *v1 << " " << *v2 << std::endl;
 
         for (size_t i = 0; i < size; i += 8) {
+            std::cout << "once" << std::endl;
+            __m256 mv1 = _mm256_load_ps(v1);
+            __m256 mv2 = _mm256_load_ps(v2);
             sum = _mm256_add_ps(sum, 
                 _mm256_mul_ps(
                     _mm256_load_ps(v1),
@@ -76,7 +73,7 @@ namespace PQ {
             v2+=8;
         }
         alignas(32) float stored[8];
-        _mm256_store_ps(stored, res);
+        _mm256_store_ps(stored, sum);
         int16_t ip = 0;
         for (unsigned i=0; i<8; i++) { ip += stored[i]; }
         return ip;
@@ -96,7 +93,7 @@ namespace PQ {
         }
 
         // Assign a centroid `c` to the euclidean mean of all the points assigned to it using avx2
-        std::vector<float> getCentroid(const data_t &data, std::unsigned<int> &members) const
+        std::vector<float> getCentroid(const data_t &data, std::vector<unsigned int> &members) const
         {
             std::vector<float> centroid(0,data[0].size());
 
@@ -106,7 +103,7 @@ namespace PQ {
                 sum[n] = _mm256_setzero_ps();
             }
             for (unsigned int idx : members) {
-                float *a = &data[idx][0];
+                const float *a = &data[idx][0];
                 for (unsigned int n = 0; n < n256; n++, a+=8) {
                     sum[n] = _mm256_add_ps(sum[n], _mm256_loadu_ps(a));
                 }
@@ -165,12 +162,12 @@ namespace PQ {
     {
         float sum = 0;
         for (size_t i = 0; i < size; i++) {
-            sum += *v1++ + *v1++;
+            sum += *(v1++) * *(v2++);
         }
         return sum;
     }
 
-    class LossBase: ILoss {
+    class LossDefault: ILoss {
         // Sets a cluster centroid to the mean of all points inside the cluster
         // This is independent of the distance type
         std::vector<float> getCentroid(const data_t &data, const std::vector<unsigned int> &members) const
@@ -190,7 +187,7 @@ namespace PQ {
         }
     };
 
-    class EuclideanLoss: LossBase {
+    class EuclideanLoss: LossDefault {
 
         // Calculates the sum of squares of the difference between two vectors
         // This is analagous to euclidean distance

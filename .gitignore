@@ -1,0 +1,7 @@
+Makefile
+CMakeCache.txt
+cmake_install.cmake
+test_avx
+test_no_avx
+.vscode/
+CMakeFiles/

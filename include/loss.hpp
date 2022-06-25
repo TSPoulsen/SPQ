@@ -21,13 +21,12 @@ namespace PQ {
 
     using data_t = std::vector<std::vector<float>>;
 
-    class ILoss {
-    public:
+    struct ILoss {
         // Default is to not pad
-        virtual unsigned int padData(data_t&) const { return 0u; }; 
+        unsigned int padData(data_t&) const { return 0u; } ; 
 
         // Default initialization method (KMeans++)
-        virtual data_t initCentroids(const data_t &data, const unsigned int K) const {
+        data_t initCentroids(const data_t &data, const unsigned int K) const {
             data_t centroids(K);
             // Pick first centroids uniformly
             std::default_random_engine gen;
@@ -39,7 +38,7 @@ namespace PQ {
             for (unsigned int c_i = 1; c_i < K; c_i++) {
                 // Calculate distances to last chosen centroid
                 for (unsigned int i = 0; i < data.size(); i++) {
-                    double new_dist = distance(data[i], centroids[c_i-1]);
+                    double new_dist = distance(data[i], centroids[c_i-1]); // Default use euclidean distance
                     distances[i] = std::min(distances[i], new_dist);
                 }
                 std::discrete_distribution<int> rng(distances.begin(), distances.end());
@@ -48,9 +47,9 @@ namespace PQ {
             return centroids;
         }
 
-        virtual std::vector<float> getCentroid(const data_t&, const std::vector<unsigned int>&) const;
-        
-        virtual double distance(const std::vector<float>&, const std::vector<float>&) const;
+        virtual double distance(const std::vector<float> &v1, const std::vector<float> &v2) const = 0; 
+        virtual std::vector<float> getCentroid(const data_t &data, const std::vector<unsigned int> &members) const = 0;
+
     };
 
 #ifdef __AVX2__
@@ -58,16 +57,14 @@ namespace PQ {
     float inner_product(const float *v1, const float *v2, const size_t size)
     {
         __m256 sum = _mm256_setzero_ps();
-        std::cout << *v1 << " " << *v2 << std::endl;
 
         for (size_t i = 0; i < size; i += 8) {
-            std::cout << "once" << std::endl;
-            __m256 mv1 = _mm256_load_ps(v1);
-            __m256 mv2 = _mm256_load_ps(v2);
+            __m256 mv1 = _mm256_loadu_ps(v1);
+            __m256 mv2 = _mm256_loadu_ps(v2);
             sum = _mm256_add_ps(sum, 
                 _mm256_mul_ps(
-                    _mm256_load_ps(v1),
-                    _mm256_load_ps(v2)));
+                    mv1,
+                    mv2));
 
             v1+=8;
             v2+=8;
@@ -79,13 +76,13 @@ namespace PQ {
         return ip;
     }
 
-    class LossAVX: ILoss {
+    struct LossAVX: ILoss {
         // Overload of ILoss which adds padding such that each vector is a multiple of 8
-        unsigned int padData(data_t &data) const 
+        size_t padData(data_t &data) const
         {
-            unsigned int padding = (8 - (data[0].size() % 8))%8;
+            size_t padding = (8 - (data[0].size() % 8))%8;
             for (std::vector<float> &vec : data) {
-                for (unsigned int p = 0; p < padding; p++) {
+                for (size_t p = 0; p < padding; p++) {
                     vec.push_back(0);
                 }
             }
@@ -93,15 +90,11 @@ namespace PQ {
         }
 
         // Assign a centroid `c` to the euclidean mean of all the points assigned to it using avx2
-        std::vector<float> getCentroid(const data_t &data, std::vector<unsigned int> &members) const
+        std::vector<float> getCentroid(const data_t &data, const std::vector<unsigned int> &members) const
         {
-            std::vector<float> centroid(0,data[0].size());
-
             unsigned int n256 = data[0].size()/8;
-            __m256 sum[n256];
-            for (unsigned int n = 0; n < n256; n++) {
-                sum[n] = _mm256_setzero_ps();
-            }
+            std::vector<__m256> sum(n256, _mm256_setzero_ps());
+
             for (unsigned int idx : members) {
                 const float *a = &data[idx][0];
                 for (unsigned int n = 0; n < n256; n++, a+=8) {
@@ -112,6 +105,7 @@ namespace PQ {
             float div = 1.0/members.size();
             alignas(32) float div_a[8] = {div, div, div, div, div, div, div, div};
             __m256 div_v = _mm256_load_ps(div_a);
+            std::vector<float> centroid(data[0].size());
             float *cen_s = &centroid[0];
             for (unsigned int n = 0; n < n256; n++, cen_s += 8) {
                 _mm256_storeu_ps(cen_s,
@@ -121,7 +115,7 @@ namespace PQ {
         }
     };
 
-    class EuclideanLoss: LossAVX {
+    struct EuclideanLoss: LossAVX {
         // Calculates the sum of squares between two vectors using avx2
         double distance(const std::vector<float> &v1, const std::vector<float> &v2) const
         {
@@ -167,7 +161,7 @@ namespace PQ {
         return sum;
     }
 
-    class LossDefault: ILoss {
+    struct LossDefault: ILoss {
         // Sets a cluster centroid to the mean of all points inside the cluster
         // This is independent of the distance type
         std::vector<float> getCentroid(const data_t &data, const std::vector<unsigned int> &members) const
@@ -187,8 +181,7 @@ namespace PQ {
         }
     };
 
-    class EuclideanLoss: LossDefault {
-
+    struct EuclideanLoss: LossDefault {
         // Calculates the sum of squares of the difference between two vectors
         // This is analagous to euclidean distance
         double distance(const std::vector<float> &v1, const std::vector<float> &v2) const

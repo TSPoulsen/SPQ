@@ -29,7 +29,8 @@ namespace PQ{
         struct Cluster {
             std::vector<float> centroid;
             std::vector<unsigned int> members;
-            Cluster(const std::vector cen): centroid(cen){}
+            Cluster(const std::vector<float> &cen): centroid(cen){}
+            Cluster() {}
             Cluster(const Cluster &c1): centroid(c1.centroid), members(c1.members){} // Is this still needed
         };
         std::vector<Cluster> clusters;
@@ -38,10 +39,10 @@ namespace PQ{
         bool is_fitted = false;
 
         // Clustering configuration
+        TLoss loss;
         const unsigned int K;
         const double TOL; // Minium relative change between two iteration, otherwise stop training
         const unsigned int MAX_ITER; // Maximum number of iterations
-        loss MODE;
         double inertia = DBL_MAX;
 
     public:
@@ -55,57 +56,59 @@ namespace PQ{
                unsigned int max_iter = 100, double tol = 0.001)
             : K(K_clusters),
             TOL(tol),
-            MAX_ITER(max_iter),
-            clusters(K)
+            MAX_ITER(max_iter)
 
         {
             std::cout << "Creating Kmeans with K=" << K << std::endl; // debug
             assert(K <= 256);
             assert(K > 0);
+            data_t v = {{1.0,0.1}};
+            //std::cout << "loss padd" << std::endl;
+            //std::cout << "loss padd" << loss.padData(v) << std::endl;
         }
 
         // Finds the best set of clusters that minimizes the inertia
-        void fit(data_t &data, data_t &centroids)
+        void fit(data_t &data)
         {
-            if (!is_fitted) {
-                assert(K <= data.size());
-                padding = TLoss::padData(data);
-                unsigned int iteration = 0;
-                double inertia_delta = 1.0;
+            if (is_fitted) {
+                return;
+            }
+            assert(K <= data.size());
+            padding = loss.padData(data);
+            //std::cout << padding << std::endl;
+            unsigned int iteration = 0;
+            double inertia_delta = 1.0;
 
-                // Initalize clusters
-                data_t centroids = TLoss::initCentroids(data);
-                for (std::vector<float> cen : centroids) {
-                    clusters.append(Cluster(cen));
+            // Initalize clusters
+            //std::cout << "Init centroids K = " << K << std::endl;
+            //std::cout << "data size = " << data.size() << "," << data[0].size() << std::endl;
+            data_t centroids = loss.initCentroids(data, K);
+            //std::cout << "Init centroids DONE" << std::endl;
+            for (std::vector<float> cen : centroids) {
+                //std::cout << "pushing back" << std::endl;
+                clusters.push_back(Cluster(cen));
+            }
+
+            //std::cout << "Kmeans total iterations " << MAX_ITER << " : ";
+            while (inertia_delta >= TOL && iteration < MAX_ITER)
+            {
+                if (iteration%10 == 0) std::cout << iteration << "-" << std::flush; // debug
+                // Step 1 in llyod: assign points to clusters
+                double current_inertia = assignToClusters(data);
+
+                // Step 2 in llyod: Set clusters to be center of points in cluster
+                // Assigns all centriods
+                for (Cluster &c : clusters) {
+                    c.centroid = loss.getCentroid(data, c.members);
                 }
 
-                //std::cout << "Kmeans total iterations " << max_iter << " : ";
-                while (inertia_delta >= TOL && iteration < MAX_ITER)
-                {
-                    if (iteration%10 == 0) std::cout << iteration << "-" << std::flush; // debug
-                    // Step 1 in llyod: assign points to clusters
-                    double current_inertia = assignToClusters(data);
-
-                    // Step 2 in llyod: Set clusters to be center of points in cluster
-                    // Assigns all centriods
-                    for (Cluster &c : clusters) {
-                        c.centroid = TLoss::getCentroid(data, c.members);
-                    }
-
-                    // Calculate inertia difference
-                    inertia_delta = (inertia - current_inertia)/inertia;
-                    inertia = current_inertia;
-                    iteration++;
-                }
-                std::cout << std::endl; // debug
-                is_fitted = true;
+                // Calculate inertia difference
+                inertia_delta = (inertia - current_inertia)/inertia;
+                inertia = current_inertia;
+                iteration++;
             }
-            data_t centroids(K);
-            centroids = data_t(K);
-            for (Cluster &c : clusters) {
-                centroids[i] = c.centroid;
-
-            }
+            std::cout << std::endl; // debug
+            is_fitted = true;
         }
 
     private:
@@ -124,7 +127,7 @@ namespace PQ{
                 double min_dist = DBL_MAX;
                 unsigned int min_label = data.size() + 1;
                 for (unsigned int c_i = 0; c_i < K; c_i++) {
-                    double d = TLoss::distance(data[i], clusters[c_i].centroid);
+                    double d = loss.distance(data[i], clusters[c_i].centroid);
                     if (d < min_dist) {
                         min_label = c_i;
                         min_dist = d;

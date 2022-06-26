@@ -23,11 +23,12 @@ namespace PQ {
 
     struct ILoss {
         // Default is to not pad
-        unsigned int padData(data_t&) const { return 0u; } ; 
+        virtual size_t padData(data_t&) const { return 0u; } ; 
 
         // Default initialization method (KMeans++)
-        data_t initCentroids(const data_t &data, const unsigned int K) const {
+        data_t initCentroids(const data_t &data, const size_t K) const {
             data_t centroids(K);
+            if (K == 0u) return centroids;
             // Pick first centroids uniformly
             std::default_random_engine gen;
             std::uniform_int_distribution<unsigned int> random_idx(0, data.size()-1);
@@ -35,7 +36,7 @@ namespace PQ {
 
             // Choose the rest proportional to their distance to already chosen centroids
             std::vector<double> distances(data.size(), DBL_MAX);
-            for (unsigned int c_i = 1; c_i < K; c_i++) {
+            for (size_t c_i = 1; c_i < K; c_i++) {
                 // Calculate distances to last chosen centroid
                 for (unsigned int i = 0; i < data.size(); i++) {
                     double new_dist = distance(data[i], centroids[c_i-1]); // Default use euclidean distance

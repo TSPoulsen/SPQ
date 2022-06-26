@@ -4,6 +4,7 @@
 #include "loss.hpp"
 
 #include <iostream>
+#include <set>
 
 
 
@@ -70,6 +71,24 @@ namespace loss {
         for (size_t i = 0; i < ans.size(); i++) {
             std::vector<float> guess = loss.getCentroid(vectors, all_members[i]);
             CHECK(guess == ans[i]);
+        }
+    }
+
+    TEST_CASE("initCentroids Test")
+    {
+        PQ::data_t vectors = {  {0,0,0,0},
+                                {1,0,0,1},
+                                {0,1,1,0},
+                                {1,0,0,0},
+                                {0,1,1,1}};
+                        
+        PQ::EuclideanLoss loss;
+        loss.padData(vectors);
+        for (size_t K = 0; K < vectors.size(); K++) {
+            PQ::data_t centroids = loss.initCentroids(vectors, K);
+            CHECK(centroids.size() == K);
+            std::set<std::vector<float>> uniq(centroids.begin(), centroids.end());
+            CHECK(uniq.size() == K);
         }
     }
 

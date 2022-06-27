@@ -22,10 +22,19 @@ namespace PQ
 
     using data_t = std::vector<std::vector<float>>;
 
-    struct ILoss
+    class ILoss
     {
+    public:
+
+        virtual void init(data_t &data)
+        {
+            padData(data);
+        }
+
         // Default is to not pad
-        virtual size_t padData(data_t &) const { return 0u; };
+        virtual size_t padData(data_t &) const { 
+            return 0u; 
+        }
 
         // Default initialization method (KMeans++)
         data_t initCentroids(const data_t &data, const size_t K) const
@@ -86,8 +95,9 @@ namespace PQ
         return ip;
     }
 
-    struct LossAVX : ILoss
+    class LossAVX : public ILoss
     {
+    public:
         // Overload of ILoss which adds padding such that each vector is a multiple of 8
         size_t padData(data_t &data) const
         {
@@ -131,8 +141,10 @@ namespace PQ
         }
     };
 
-    struct EuclideanLoss : LossAVX
+    class EuclideanLoss : public LossAVX
     {
+    public:
+
         // Calculates the sum of squares between two vectors using avx2
         double distance(const std::vector<float> &v1, const std::vector<float> &v2) const
         {
@@ -155,18 +167,51 @@ namespace PQ
         }
     };
 
-    /*
-        class IPLoss: ILossAVX {
-            double distance(const std::vector<float> &v1, const std::vector<float> &v2) = null;
-            std::vector<float> getCentroid(const data_t &data, std::unsigned<int> &members) = null;
+    class IPLoss : public LossAVX
+    {
+        // Non-centered covariance matrix of data
+        data_t cov;
+
+    public:
+        // Initializes the covariance matrix
+        void init(data_t &data)
+        {
+            LossAVX::init(data);
+            size_t dim = data[0].size();
+            cov = std::vector<std::vector<float>>(dim, std::vector<float>(dim, 0));
+
+            // Add all v[i] * v[j]
+            for (unsigned int i = 0; i < dim; i++)
+            {
+                for (unsigned int d1 = 0; d1 < dim; d1++)
+                {
+                    for (unsigned int d2 = 0; d2 < data[0].size(); d2++)
+                    {
+                        cov[d1][d2] = data[i][d1] * data[i][d2];
+                    }
+                }
+            }
+            // Get average by dividing by n
+            for (size_t i = 0; i < dim; i++)
+            {
+                for (size_t j = 0; j < dim; j++)
+                {
+                    cov[i][j] /= dim;
+                }
+            }
+        }
+
+            //double distance(const std::vector<float> &v1, const std::vector<float> &v2) = null;
+            //std::vector<float> getCentroid(const data_t &data, std::unsigned<int> &members) = null;
         };
 
-        class WeightedIPLoss: ILossAVX {
-            double distance(const std::vector<float> &v1, const std::vector<float> &v2) = null;
-            std::vector<float> getCentroid(const data_t &data, std::unsigned<int> &members) = null;
+            /*
+                class WeightedIPLoss: ILossAVX {
+                    double distance(const std::vector<float> &v1, const std::vector<float> &v2) = null;
+                    std::vector<float> getCentroid(const data_t &data, std::unsigned<int> &members) = null;
 
-        };
-    */
+                };
+            */
 
 #else
 
@@ -180,8 +225,9 @@ namespace PQ
         return sum;
     }
 
-    struct LossDefault : ILoss
+    class LossDefault : public ILoss
     {
+    public:
         // Sets a cluster centroid to the mean of all points inside the cluster
         // This is independent of the distance type
         std::vector<float> getCentroid(const data_t &data, const std::vector<unsigned int> &members) const
@@ -204,8 +250,9 @@ namespace PQ
         }
     };
 
-    struct EuclideanLoss : LossDefault
+    class EuclideanLoss : public LossDefault
     {
+    public:
         // Calculates the sum of squares of the difference between two vectors
         // This is analagous to euclidean distance
         double distance(const std::vector<float> &v1, const std::vector<float> &v2) const
@@ -238,4 +285,4 @@ namespace PQ
 
 #endif
 
-} // namespace PQ
+    } // namespace PQ

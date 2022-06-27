@@ -45,7 +45,7 @@ namespace loss
                            {3, 3, 1, 4, 0}};
 
         PQ::EuclideanLoss loss;
-        size_t padding = loss.padData(vectors);
+        loss.init(vectors);
         for (int i = 0; i < 5; i++)
         {
             for (int j = 0; j < 5; j++)
@@ -68,7 +68,7 @@ namespace loss
                           {-0.5, 0, 0, 0.5},
                           {0.5, 0.5, 0.5, 0.5}};
         PQ::EuclideanLoss loss;
-        size_t vec_p = loss.padData(vectors);
+        loss.init(vectors);
         size_t ans_p = loss.padData(ans);
         for (size_t i = 0; i < ans.size(); i++)
         {
@@ -86,7 +86,7 @@ namespace loss
                               {0, 1, 1, 1}};
 
         PQ::EuclideanLoss loss;
-        loss.padData(vectors);
+        loss.init(vectors);
         for (size_t K = 0; K < vectors.size(); K++)
         {
             PQ::data_t centroids = loss.initCentroids(vectors, K);

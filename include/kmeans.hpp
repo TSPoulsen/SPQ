@@ -37,12 +37,12 @@ namespace PQ
         };
         std::vector<Cluster> clusters;
 
+        TLoss loss;
     private:
         unsigned int padding = 0; // Padding at the end of each vector
         bool is_fitted = false;
 
         // Clustering configuration
-        TLoss loss;
         const unsigned int K;
         const double TOL;            // Minium relative change between two iteration, otherwise stop training
         const unsigned int MAX_ITER; // Maximum number of iterations
@@ -77,9 +77,9 @@ namespace PQ
             {
                 return;
             }
+            loss.init(data);
             assert(K <= data.size());
-            padding = loss.padData(data);
-            // std::cout << padding << std::endl;
+
             unsigned int iteration = 0;
             double inertia_delta = 1.0;
 

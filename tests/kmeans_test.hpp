@@ -85,8 +85,8 @@ namespace kmeans
         td.answer = {
             {-1.0, 0.0},
             {1.0, 0.0}};
-        std::cout << "this" << std::endl;
         kmeans_correctness_test<PQ::EuclideanLoss>(td);
+        kmeans_correctness_test<PQ::ProductLoss>(td);
         return;
     }
 
@@ -113,6 +113,7 @@ namespace kmeans
             {0.0, 1.0},
             {0.0, -1.0}};
         kmeans_correctness_test<PQ::EuclideanLoss>(td);
+        kmeans_correctness_test<PQ::ProductLoss>(td);
         return;
     }
 
@@ -140,6 +141,7 @@ namespace kmeans
             {0.0, 1.0},
             {0.0, -1.0}};
         kmeans_correctness_test<PQ::EuclideanLoss>(td);
+        kmeans_correctness_test<PQ::ProductLoss>(td);
     }
 
     TEST_CASE("basic euclidean clustering 4")
@@ -162,5 +164,6 @@ namespace kmeans
             {0.12894223, 0.2116554},
             {0.65555375, 0.13147274}};
         kmeans_correctness_test<PQ::EuclideanLoss>(td);
+        kmeans_correctness_test<PQ::ProductLoss>(td);
     }
 } // namespace kmeans

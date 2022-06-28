@@ -55,7 +55,7 @@ namespace loss
         }
     }
 
-    TEST_CASE("EuclideanLoss getCentroid Test")
+    TEST_CASE("EuclideanLoss/IPLoss getCentroid Test")
     {
         PQ::data_t vectors = {{0, 0, 0, 0},
                               {-1, 0, 0, 1},
@@ -93,6 +93,51 @@ namespace loss
             CHECK(centroids.size() == K);
             std::set<std::vector<float>> uniq(centroids.begin(), centroids.end());
             CHECK(uniq.size() == K);
+        }
+    }
+
+    TEST_CASE("ProductLoss covariance creation Test")
+    {
+        PQ::data_t vectors = {{0, 0, 0, 0},
+                              {-1, 0, 0, 1},
+                              {0, 1, 1, 0},
+                              {1, 0, 0, 0},
+                              {0, 1, 1, 1}};
+        PQ::data_t ans = { {0.4, 0, 0, -0.2},
+                           {0, 0.4, 0.4, 0.2},
+                           {0, 0.4, 0.4, 0.2},
+                           {-0.2, 0.2, 0.2, 0.4}};
+        PQ::ProductLoss loss;
+        loss.init(vectors);
+        loss.padData(ans);
+        for (int i = 0; i < ans.size(); i++)
+        {
+            CHECK(loss.cov[i] == ans[i]);
+        }
+    }
+
+    TEST_CASE("ProductLoss distance Test")
+    {
+        PQ::data_t vectors = {{0, 0, 0, 0},
+                              {-1, 0, 0, 1},
+                              {0, 1, 1, 0},
+                              {1, 0, 0, 0},
+                              {0, 1, 1, 1}};
+
+        float ans[5][5] = {{0, 1.2, 1.6, 0.4, 2.8},
+                           {1.2, 0, 2, 2.8, 2},
+                           {1.6, 2, 0, 2, 0.4},
+                           {0.4, 2.8, 2.0, 0, 3.6},
+                           {2.8, 2, 0.4, 3.6, 0}};
+
+        PQ::ProductLoss loss;
+        loss.init(vectors);
+        for (int i = 0; i < 5; i++)
+        {
+            for (int j = 0; j < 5; j++)
+            {
+                CHECK(loss.distance(vectors[i], vectors[j]) == Approx(ans[i][j]));
+            }
         }
     }
 

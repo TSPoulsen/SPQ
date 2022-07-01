@@ -8,28 +8,6 @@
 
 namespace loss
 {
-    TEST_CASE("inner_product Test")
-    {
-        PQ::data_t vectors = {{0, 0, 0, 0, 0, 0, 0, 0},
-                              {1, 0, 0, 1, 0, 0, 0, 0},
-                              {0, 1, 1, 0, 0, 0, 0, 0},
-                              {1, 0, 0, 0, 0, 0, 0, 0},
-                              {0, 1, 1, 1, 0, 0, 0, 0}};
-
-        float ans[5][5] = {{0, 0, 0, 0, 0},
-                           {0, 2, 0, 1, 1},
-                           {0, 0, 2, 0, 2},
-                           {0, 1, 0, 1, 0},
-                           {0, 1, 2, 0, 3}};
-        for (int i = 0; i < 5; i++)
-        {
-            for (int j = 0; j < 5; j++)
-            {
-                CHECK(PQ::inner_product(&(vectors[i][0]), &(vectors[j][0]), 8) == ans[i][j]);
-            }
-        }
-    }
-
     TEST_CASE("EuclideanLoss distance Test")
     {
         PQ::data_t vectors = {{0, 0, 0, 0},
@@ -50,7 +28,7 @@ namespace loss
         {
             for (int j = 0; j < 5; j++)
             {
-                CHECK(loss.distance(vectors[i], vectors[j]) == ans[i][j]);
+                CHECK(loss.distance(i, vectors[j]) == ans[i][j]);
             }
         }
     }
@@ -72,7 +50,7 @@ namespace loss
         size_t ans_p = loss.padData(ans);
         for (size_t i = 0; i < ans.size(); i++)
         {
-            std::vector<float> guess = loss.getCentroid(vectors, all_members[i]);
+            std::vector<float> guess = loss.getCentroid(all_members[i]);
             CHECK(guess == ans[i]);
         }
     }
@@ -89,7 +67,7 @@ namespace loss
         loss.init(vectors);
         for (size_t K = 0; K < vectors.size(); K++)
         {
-            PQ::data_t centroids = loss.initCentroids(vectors, K);
+            PQ::data_t centroids = loss.initCentroids(K);
             CHECK(centroids.size() == K);
             std::set<std::vector<float>> uniq(centroids.begin(), centroids.end());
             CHECK(uniq.size() == K);
@@ -110,7 +88,7 @@ namespace loss
         PQ::ProductLoss loss;
         loss.init(vectors);
         loss.padData(ans);
-        for (int i = 0; i < ans.size(); i++)
+        for (size_t i = 0; i < ans.size(); i++)
         {
             CHECK(loss.cov[i] == ans[i]);
         }
@@ -136,9 +114,10 @@ namespace loss
         {
             for (int j = 0; j < 5; j++)
             {
-                CHECK(loss.distance(vectors[i], vectors[j]) == Approx(ans[i][j]));
+                CHECK(loss.distance(i, vectors[j]) == Approx(ans[i][j]));
             }
         }
     }
+    // Make test for l2_norm and weightedLoss
 
 } // namespace loss

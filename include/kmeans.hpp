@@ -86,7 +86,7 @@ namespace PQ
             // Initalize clusters
             // std::cout << "Init centroids K = " << K << std::endl;
             // std::cout << "data size = " << data.size() << "," << data[0].size() << std::endl;
-            data_t centroids = loss.initCentroids(data, K);
+            data_t centroids = loss.initCentroids(K);
             // std::cout << "Init centroids DONE" << std::endl;
             for (std::vector<float> cen : centroids)
             {
@@ -106,7 +106,7 @@ namespace PQ
                 // Assigns all centriods
                 for (Cluster &c : clusters)
                 {
-                    c.centroid = loss.getCentroid(data, c.members);
+                    c.centroid = loss.getCentroid(c.members);
                 }
 
                 // Calculate inertia difference
@@ -137,7 +137,7 @@ namespace PQ
                 unsigned int min_label = data.size() + 1;
                 for (unsigned int c_i = 0; c_i < K; c_i++)
                 {
-                    double d = loss.distance(data[i], clusters[c_i].centroid);
+                    double d = loss.distance(i, clusters[c_i].centroid);
                     if (d < min_dist)
                     {
                         min_label = c_i;

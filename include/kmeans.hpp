@@ -1,6 +1,7 @@
 #pragma once
 
-#include "loss.hpp"
+#include "loss/loss_base.hpp"
+#include "loss/euclidean_loss.hpp"
 
 #include <cassert>
 #include <algorithm>
@@ -23,7 +24,7 @@ namespace PQ
 
     // The implementation of this class has taken parts from: https://github.com/yahoojapan/NGT/blob/master/lib/NGT/Clustering.h
     /// Class for performing k-means clustering on a given dataset
-    template <typename TLoss = EuclideanLoss>
+    template <class TLoss>
     class KMeans
     {
     public:

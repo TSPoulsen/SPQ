@@ -1,7 +1,10 @@
 #pragma once
 
 #include "catch.hpp"
-#include "loss.hpp"
+#include "loss/loss_base.hpp"
+#include "loss/euclidean_loss.hpp"
+#include "loss/product_loss.hpp"
+#include "loss/weighted_loss.hpp"
 
 #include <iostream>
 #include <set>
@@ -24,6 +27,7 @@ namespace loss
 
         PQ::EuclideanLoss loss;
         loss.init(vectors);
+        std::cout << vectors[0].size() << std::endl;
         for (int i = 0; i < 5; i++)
         {
             for (int j = 0; j < 5; j++)
@@ -118,6 +122,55 @@ namespace loss
             }
         }
     }
-    // Make test for l2_norm and weightedLoss
+
+    TEST_CASE("WeightedProductLoss scalings Test")
+    {
+        // This proxy only works for large dimensionality
+        PQ::data_t vectors = {std::vector<float>(100,0),
+                              std::vector<float>(100,1),
+                              std::vector<float>(100,2)};
+        PQ::WeightedProductLoss loss;
+
+        SECTION ("T=0.0")
+        {
+            loss.init(vectors);
+            for (size_t i = 0; i < vectors.size(); i++)
+            {
+                CHECK(loss.getScaling(i) == 1.0);
+            }
+        }
+        SECTION ("T=0.2")
+        {
+            loss.init(vectors, 0.2);
+            CHECK(loss.getScaling(0) != loss.getScaling(0));
+            double ans[2] = {0.040,0.010};
+            for (size_t i = 1; i < vectors.size(); i++)
+            {
+                CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
+            }
+            loss.init(vectors, 0.2);
+
+        }
+        SECTION ("T=1.0")
+        {
+            loss.init(vectors, 1.0);
+            double ans[2] = {1.010, 0.2506};
+            for (size_t i = 1; i < vectors.size(); i++)
+            {
+                CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
+            }
+        }
+
+        SECTION ("T=9.0")
+        {
+            loss.init(vectors, 9.0);
+            double ans[2] = {426.326, 25.39};
+            for (size_t i = 1; i < vectors.size(); i++)
+            {
+                CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
+            }
+        }
+
+    }
 
 } // namespace loss

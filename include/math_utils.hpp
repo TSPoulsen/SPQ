@@ -1,3 +1,9 @@
+#pragma once
+
+#ifdef __AVX2__
+#include <immintrin.h>
+#endif
+
 #include <vector>
 namespace PQ::Math
 {
@@ -31,7 +37,6 @@ namespace PQ::Math
     }
 
 #ifdef __AVX2__
-#include <immintrin.h>
     float innerProduct(const float *v1, const float *v2, const size_t size)
     {
         __m256 sum = _mm256_setzero_ps();

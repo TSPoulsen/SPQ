@@ -11,7 +11,6 @@
 #include "math_utils.hpp"
 #include "loss/loss_base.hpp"
 
-#define PTR_START(data_ptr, idx) &(*data_ptr)[idx][0]
 
 namespace PQ
 {
@@ -22,7 +21,7 @@ namespace PQ
     protected:
         const data_t *data_;
         size_t N_;
-        size_t dim_;
+        size_t dim_; // including padding
         size_t padding_;
     public:
         virtual void init(data_t &data)
@@ -33,13 +32,32 @@ namespace PQ
             N_ = data.size();
             dim_ = data[0].size();
         }
+#ifdef __AVX2__
+        // Overload of ILoss which adds padding such that each vector is a multiple of 8
+        size_t padData(data_t &data)
+        {
+            size_t dim = data[0].size();
+            //std::cout << "padding data" << std::endl;
+            padding_ = (8 - (dim % 8)) % 8;
+            //std::cout << "pad size: " << padding << std::endl; 
+            for (std::vector<float> &vec : data)
+            {
+                for (size_t p = 0; p < padding_; p++)
+                {
+                    vec.push_back(0);
+                }
+            }
+            return padding_;
+        }
+#else
 
         // Default is to not pad
-        virtual size_t padData(data_t &)
+        size_t padData(data_t &)
         {
             padding_ = 0u;
             return padding_;
         }
+#endif
 
         // Default initialization method (KMeans++)
         data_t initCentroids(const size_t K) const
@@ -77,22 +95,6 @@ namespace PQ
     {
     public:
 
-        // Overload of ILoss which adds padding such that each vector is a multiple of 8
-        size_t padData(data_t &data)
-        {
-            size_t dim = data[0].size();
-            //std::cout << "padding data" << std::endl;
-            padding_ = (8 - (dim % 8)) % 8;
-            //std::cout << "pad size: " << padding << std::endl; 
-            for (std::vector<float> &vec : data)
-            {
-                for (size_t p = 0; p < padding_; p++)
-                {
-                    vec.push_back(0);
-                }
-            }
-            return padding_;
-        }
 
         // Assign a centroid `c` to the euclidean mean of all the points assigned to it using avx2
         std::vector<float> getCentroid(const std::vector<unsigned int> &members) const

@@ -40,7 +40,6 @@ namespace PQ
 
         TLoss loss;
     private:
-        unsigned int padding = 0; // Padding at the end of each vector
         bool is_fitted = false;
 
         // Clustering configuration

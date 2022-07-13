@@ -4,10 +4,21 @@
 #include <immintrin.h>
 #endif
 
+#include <cstddef>
+
 #include <vector>
-namespace PQ::Math
+
+namespace PQ 
 {
     using data_t = std::vector<std::vector<float>>;
+
+    inline const float* PTR_START(const data_t* const data_ptr, const size_t idx)
+    {
+        return &((*data_ptr)[idx][0]);
+    }
+
+namespace Math
+{
     // Calculates the non-centered covariance and sets it to cov
     void setCov(const data_t &data, data_t &cov)
     {
@@ -76,4 +87,5 @@ namespace PQ::Math
 
 #endif
 
+}
 }

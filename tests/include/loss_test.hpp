@@ -126,9 +126,11 @@ namespace loss
     TEST_CASE("WeightedProductLoss scalings Test")
     {
         // This proxy only works for large dimensionality
+
         PQ::data_t vectors = {std::vector<float>(100,0),
                               std::vector<float>(100,1),
-                              std::vector<float>(100,2)};
+                              std::vector<float>(100,2),
+                              std::vector<float>(100,-1)};
         PQ::WeightedProductLoss loss;
 
         SECTION ("T=0.0")
@@ -143,18 +145,17 @@ namespace loss
         {
             loss.init(vectors, 0.2);
             CHECK(loss.getScaling(0) != loss.getScaling(0));
-            double ans[2] = {0.040,0.010};
+            double ans[3] = {0.040,0.010, 0.040};
             for (size_t i = 1; i < vectors.size(); i++)
             {
                 CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
             }
-            loss.init(vectors, 0.2);
 
         }
         SECTION ("T=1.0")
         {
             loss.init(vectors, 1.0);
-            double ans[2] = {1.010, 0.2506};
+            double ans[3] = {1.010, 0.2506, 1.010};
             for (size_t i = 1; i < vectors.size(); i++)
             {
                 CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
@@ -164,7 +165,7 @@ namespace loss
         SECTION ("T=9.0")
         {
             loss.init(vectors, 9.0);
-            double ans[2] = {426.326, 25.39};
+            double ans[3] = {426.326, 25.39, 426.326};
             for (size_t i = 1; i < vectors.size(); i++)
             {
                 CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));

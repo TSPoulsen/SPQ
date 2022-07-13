@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <vector>
+#include <iostream>
 
 #include "math_utils.hpp"
 #include "loss/loss_base.hpp"
@@ -24,7 +25,6 @@ namespace PQ
         // It is the same for all points
         // When the parallel scaling is approximated, the orthogonal error has to be divided by (d-1)
         // as this is done in the approximation
-        double orthogonal_scaling;
 
         // This is an approximation of the true scaling, see equation 3 (Theorem 3.4 in original paper)
         double scalingApproximation(const std::vector<float> &v1)
@@ -58,7 +58,6 @@ namespace PQ
             ILoss::init(data);
             assert(w >= 0.0);
             weight = w;
-            orthogonal_scaling = 1.0 / (data_[0].size() - 1);
             for (const std::vector<float> &v1 : *data_)
             {
                 parallel_scalings.push_back(scalingApproximation(v1));
@@ -66,7 +65,7 @@ namespace PQ
         }
 
         // This is purely used for testing purposes
-        // Any code inside this loss class should just access parallel_scalings
+        // Any code inside this loss class should just access m_parallel_scalings
         double getScaling(const size_t idx) const
         {
             assert(idx <= parallel_scalings.size());
@@ -76,7 +75,7 @@ namespace PQ
         double distance(const size_t idx, const std::vector<float> &v2) const
         {
             std::pair<double, double> errors = calculateErrors((*data_)[idx], v2);
-            return parallel_scalings[idx] * errors.first + orthogonal_scaling * errors.second;
+            return parallel_scalings[idx] * errors.first + errors.second;
         }
 
         std::vector<float> getCentroid(const std::vector<unsigned int> &members) const 

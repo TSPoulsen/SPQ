@@ -37,7 +37,7 @@ namespace loss
         }
     }
 
-    TEST_CASE("EuclideanLoss/IPLoss getCentroid Test")
+    TEST_CASE("EuclideanLoss/ProductLoss getCentroid Test")
     {
         PQ::data_t vectors = {{0, 0, 0, 0},
                               {-1, 0, 0, 1},
@@ -172,6 +172,54 @@ namespace loss
             }
         }
 
+    }
+
+    TEST_CASE("WeightedProductLoss distance test")
+    {
+        PQ::data_t vectors = {{0, 0, 0, 0},
+                              {-1, 0, 0, 1},
+                              {0, 1, 1, 0},
+                              {1, 0, 0, 0},
+                              {0, 1, 1, 1}};
+
+
+        PQ::WeightedProductLoss loss;
+        SECTION ("T=0.0")
+        {
+            loss.init(vectors, 0.0);
+            // dist(i,j)
+            // where ans[i][j]
+            float ans[5][5] = { {-1,   -1,  -1,  -1,  -1},
+                                { 2.0,  0.0, 4.0, 5.0, 3.0},
+                                { 2.0,  4.0, 0.0, 3.0, 1.0},
+                                { 1.0,  5.0, 3.0, 0.0, 4.0},
+                                { 3.0,  3.0, 1.0, 4.0, 0.0}};
+            for (size_t i = 1; i < vectors.size(); i++)
+            {
+                for (size_t j = 0; j < vectors.size(); j++)
+                {
+                    CHECK(loss.distance(i,vectors[j]) ==  Approx(ans[i][j]).epsilon(0.001));
+                }
+            }
+        }
+        SECTION ("T=0.2")
+        {
+            loss.init(vectors, 0.2);
+            // dist(i,j)
+            // where ans[i][j]
+            float ans[5][5] = { {-1,   -1,     -1,     -1,     -1},
+                                { 0.1633,    0.0,    2.1633, 0.8673, 2.5408},
+                                { 0.1633,    2.1633, 0.0,    1.1633, 1.0},
+                                { 0.1666,    1.6667, 2.1667, 0.0,    3.1667},
+                                { 0.1621,    1.7387, 0.6847, 1.1622, 0.0}};
+            for (size_t i = 1; i < vectors.size(); i++)
+            {
+                for (size_t j = 0; j < vectors.size(); j++)
+                {
+                    CHECK(loss.distance(i,vectors[j]) ==  Approx(ans[i][j]).epsilon(0.001));
+                }
+            }
+        }
     }
 
 } // namespace loss

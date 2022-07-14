@@ -59,7 +59,7 @@ namespace loss
         }
     }
 
-    TEST_CASE("initCentroids Test")
+    TEST_CASE("LossDefault initCentroids Test")
     {
         PQ::data_t vectors = {{0, 0, 0, 0},
                               {1, 0, 0, 1},
@@ -94,7 +94,7 @@ namespace loss
         loss.padData(ans);
         for (size_t i = 0; i < ans.size(); i++)
         {
-            CHECK(loss.cov[i] == ans[i]);
+            CHECK(loss.cov_[i] == ans[i]);
         }
     }
 
@@ -219,6 +219,25 @@ namespace loss
                     CHECK(loss.distance(i,vectors[j]) ==  Approx(ans[i][j]).epsilon(0.001));
                 }
             }
+        }
+    }
+
+    TEST_CASE("WeigtedProductLoss initCentroids Test")
+    {
+        PQ::data_t vectors = {{0, 0, 0, 0},
+                              {1, 0, 0, 1},
+                              {0, 1, 1, 0},
+                              {1, 0, 0, 0},
+                              {0, 1, 1, 1}};
+
+        size_t K = 3;
+        PQ::WeightedProductLoss loss;
+        loss.init(vectors, 0.0);
+        PQ::data_t centroids = loss.initCentroids(K);
+        CHECK(centroids.size() == K);
+        for (size_t ki = 0; ki < centroids.size(); ki++)
+        {
+            CHECK(centroids[ki].size() == vectors[0].size());
         }
     }
 

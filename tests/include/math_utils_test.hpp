@@ -23,12 +23,11 @@ namespace math_utils
                            {0, 1, 0, 1, 0},
                            {0, 1, 2, 0, 3}};
 
-        PQ::data_t *p = &vectors;
         for (int i = 0; i < 5; i++)
         {
             for (int j = 0; j < 5; j++)
             {
-                CHECK(PQ::Math::innerProduct(PQ::PTR_START(p,i), PQ::PTR_START(p,j), 8) == ans[i][j]);
+                CHECK(PQ::Math::innerProduct(PQ::PTR_START(vectors,i), PQ::PTR_START(vectors,j), 8) == ans[i][j]);
             }
         }
     }
@@ -47,7 +46,7 @@ namespace math_utils
         {
             for (int j = 0; j < 4; j++)
             {
-                CHECK(PQ::Math::innerProduct(PQ::PTR_START(&vectors,i), PQ::PTR_START(&vectors,j), 128) == ans[i][j]);
+                CHECK(PQ::Math::innerProduct(PQ::PTR_START(vectors,i), PQ::PTR_START(vectors,j), 128) == ans[i][j]);
             }
         }
     }

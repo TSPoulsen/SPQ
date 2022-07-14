@@ -55,7 +55,7 @@ namespace kmeans
         std::set<std::vector<float>> run_ans;
         for (unsigned int i = 0; i < td.K; i++)
         {
-            const std::vector<float> &cen = kmeans.clusters[i].centroid;
+            const std::vector<float> &cen = kmeans.clusters_[i].centroid;
             run_ans.insert(cen);
             // std::cout << "inserted another item" << std::endl;
             //  for(const float &val: cen){

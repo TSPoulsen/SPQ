@@ -12,9 +12,9 @@ namespace PQ
 {
     using data_t = std::vector<std::vector<float>>;
 
-    inline const float* PTR_START(const data_t* const data_ptr, const size_t idx)
+    inline const float* PTR_START(const data_t& data_ref, const size_t idx)
     {
-        return &((*data_ptr)[idx][0]);
+        return &(data_ref[idx][0]);
     }
 
 namespace Math

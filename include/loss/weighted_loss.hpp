@@ -100,7 +100,7 @@ data_t WeightedProductLoss::initCentroids(const size_t K)
     KMeans<EuclideanLoss> km(K);
     km.fit(data_);
     data_t centroids;
-    for (const auto &c : km.clusters_)
+    for (const Cluster &c : km.clusters_)
     {
         centroids.push_back(c.centroid);
     }

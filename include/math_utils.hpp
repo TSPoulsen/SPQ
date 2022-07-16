@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include <vector>
+#include <random>
 
 namespace PQ 
 {
@@ -17,36 +18,32 @@ namespace PQ
         return &(data_ref[idx][0]);
     }
 
-namespace Math
-{
-    // Calculates the non-centered covariance and sets it to cov
-    void setCov(const data_t &data, data_t &cov)
+    // Fisher–Yates_shuffle
+    // If sample_size == data_size, it returns a random permutation of indicies
+    std::vector<size_t> randomSample(size_t sample_size, size_t data_size)
     {
-        size_t n = data.size();
-        size_t dim = data[0].size();
-        cov = std::vector<std::vector<float>>(dim, std::vector<float>(dim, 0));
-
-        // Add all v[i] * v[j]
-        for (unsigned int i = 0; i < n; i++)
-        {
-            for (unsigned int d1 = 0; d1 < dim; d1++)
-            {
-                for (unsigned int d2 = 0; d2 < dim; d2++)
-                {
-                    cov[d1][d2] += data[i][d1] * data[i][d2];
+        std::random_device rd; // obtain a random number from hardware
+        std::mt19937 gen(rd()); // seed the generator
+        assert(sample_size <= data_size);
+        std::vector<size_t> res(sample_size);
+        for (unsigned int i = 0; i != data_size; ++i) {
+            std::uniform_int_distribution<unsigned int> dis(0, i); // define the range
+            std::size_t j = dis(gen);
+            if (j < res.size()) {
+                if (i < res.size()) {
+                    res[i] = res[j];
                 }
+                res[j] = i;
             }
         }
-        // Get average by dividing by n
-        for (size_t i = 0; i < dim; i++)
-        {
-            for (size_t j = 0; j < dim; j++)
-            {
-                cov[i][j] /= n;
-            }
+        for (size_t idx : res) {
+            assert(idx < data_size);
         }
+        return res;
     }
 
+namespace Math
+{
 #ifdef __AVX2__
     float innerProduct(const float *v1, const float *v2, const size_t size)
     {

@@ -13,8 +13,9 @@
 
 namespace PQ
 {
+    using namespace util;
 
-class WeightedProductLoss : ILoss
+class WeightedProductLoss : public ILoss
 {
 private:
     // Refferred to as `T` in paper for I(t>T) weight function
@@ -47,7 +48,7 @@ public:
 double WeightedProductLoss::scalingApproximation(const std::vector<float> &v1)
 {
     if (weight_ == 0.0) return 1.0;
-    float v1_norm = Math::innerProduct(&v1[0], &v1[0], v1.size());
+    float v1_norm = innerProduct(&v1[0], &v1[0], v1.size());
     double frac = (weight_ * weight_) / v1_norm;
     return (frac / (1.0 - frac)) * (dim_ - padding_);
 }
@@ -58,9 +59,9 @@ std::pair<double, double> WeightedProductLoss::calculateErrors(const std::vector
     const float *v1p = &v1[0];
     const float *v2p = &v2[0];
 
-    float ip = Math::innerProduct(v1p, v2p, dim_);
-    float v1_norm = Math::innerProduct(v1p, v1p, dim_);
-    float v2_norm = Math::innerProduct(v2p, v2p, dim_);
+    float ip = innerProduct(v1p, v2p, dim_);
+    float v1_norm = innerProduct(v1p, v1p, dim_);
+    float v2_norm = innerProduct(v2p, v2p, dim_);
     float frac = (ip * ip) / (v1_norm);
 
     double para_err = v1_norm + frac - (2 * ip);

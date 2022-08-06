@@ -13,7 +13,7 @@
 
 namespace PQ
 {
-    using data_t = std::vector<std::vector<float>>;
+    using namespace util;
 
     class ILoss
     {

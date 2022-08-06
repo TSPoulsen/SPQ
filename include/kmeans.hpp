@@ -1,7 +1,6 @@
 #pragma once
 
 #include "loss/loss_base.hpp"
-#include "loss/euclidean_loss.hpp"
 
 #include <cassert>
 #include <utility>
@@ -130,7 +129,7 @@ template<class TLoss>
 std::pair<size_t,double> KMeans<TLoss>::findClosestCluster(const size_t idx, ILoss &loss) const
 {
     double min_dist = DBL_MAX;
-    size_t min_label;
+    size_t min_label = k_ + 1;
     for (size_t cluster_index = 0; cluster_index < k_; cluster_index++)
     {
         double d = loss.distance(idx, clusters_[cluster_index].centroid);
@@ -166,7 +165,7 @@ double KMeans<TLoss>::assignToClusters(const data_t &data)
 
 
 template<class TLoss>
-std::vector<uint8_t> KMeans<TLoss>::getAssignment(const data_t points) const
+std::vector<uint8_t> KMeans<TLoss>::getAssignment(data_t points) const
 {
     // TODO: Fix when loss needs to have init done with new data
     TLoss tmp_loss;

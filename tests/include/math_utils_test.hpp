@@ -9,9 +9,12 @@
 
 namespace math_utils
 {
+    using namespace PQ;
+    using namespace PQ::util;
+
     TEST_CASE("innerProduct Test")
     {
-        PQ::data_t vectors = {{0, 0, 0, 0, 0, 0, 0, 0},
+        data_t vectors = {{0, 0, 0, 0, 0, 0, 0, 0},
                               {1, 0, 0, 1, 0, 0, 0, 0},
                               {0, 1, 1, 0, 0, 0, 0, 0},
                               {1, 0, 0, 0, 0, 0, 0, 0},
@@ -27,13 +30,13 @@ namespace math_utils
         {
             for (int j = 0; j < 5; j++)
             {
-                CHECK(PQ::Math::innerProduct(PQ::PTR_START(vectors,i), PQ::PTR_START(vectors,j), 8) == ans[i][j]);
+                CHECK(util::innerProduct(PTR_START(vectors,i), PTR_START(vectors,j), 8) == ans[i][j]);
             }
         }
     }
     TEST_CASE("innerProduct Test (large)")
     {
-        PQ::data_t vectors = {std::vector<float>(128,0),
+        data_t vectors = {std::vector<float>(128,0),
                               std::vector<float>(128,1),
                               std::vector<float>(128,2),
                               std::vector<float>(128,3)};
@@ -46,8 +49,29 @@ namespace math_utils
         {
             for (int j = 0; j < 4; j++)
             {
-                CHECK(PQ::Math::innerProduct(PQ::PTR_START(vectors,i), PQ::PTR_START(vectors,j), 128) == ans[i][j]);
+                CHECK(util::innerProduct(util::PTR_START(vectors,i), util::PTR_START(vectors,j), 128) == ans[i][j]);
             }
         }
+    }
+
+    TEST_CASE("randomSample Test")
+    {
+        SECTION("Actual Sample")
+        {
+            size_t data_size = 1e4;
+            size_t sample_size = 1e3;
+            std::vector<size_t> sample = randomSample(sample_size, data_size);
+            std::set<size_t> unique(sample.begin(), sample.end());
+            CHECK(unique.size() == sample_size);
+        }
+        SECTION("Full Sample")
+        {
+            size_t data_size = 1e4;
+            std::vector<size_t> sample = randomSample(data_size, data_size);
+            std::set<size_t> unique(sample.begin(), sample.end());
+            CHECK(unique.size() == data_size);
+        }
+        std::make_pair(0,0);
+
     }
 }

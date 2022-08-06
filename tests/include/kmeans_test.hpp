@@ -10,10 +10,13 @@
 namespace kmeans
 {
 
+    using namespace PQ;
+    using namespace PQ::util;
+
     struct TestData
     {
         unsigned int N, dims, K;
-        PQ::data_t input,
+        data_t input,
             answer;
     };
 
@@ -50,7 +53,7 @@ namespace kmeans
     void kmeans_correctness_test(struct TestData td)
     {
         // std::cout << "Start of test" << std::endl;
-        PQ::KMeans<TLoss> kmeans(td.K);
+        KMeans<TLoss> kmeans(td.K);
         kmeans.fit(td.input);
         std::set<std::vector<float>> run_ans;
         for (unsigned int i = 0; i < td.K; i++)
@@ -85,8 +88,8 @@ namespace kmeans
         td.answer = {
             {-1.0, 0.0},
             {1.0, 0.0}};
-        kmeans_correctness_test<PQ::EuclideanLoss>(td);
-        kmeans_correctness_test<PQ::ProductLoss>(td);
+        kmeans_correctness_test<EuclideanLoss>(td);
+        kmeans_correctness_test<ProductLoss>(td);
         return;
     }
 
@@ -112,8 +115,8 @@ namespace kmeans
             {1.0, 0.0},
             {0.0, 1.0},
             {0.0, -1.0}};
-        kmeans_correctness_test<PQ::EuclideanLoss>(td);
-        kmeans_correctness_test<PQ::ProductLoss>(td);
+        kmeans_correctness_test<EuclideanLoss>(td);
+        kmeans_correctness_test<ProductLoss>(td);
         return;
     }
 
@@ -140,8 +143,8 @@ namespace kmeans
             {1.0, 0.0},
             {0.0, 1.0},
             {0.0, -1.0}};
-        kmeans_correctness_test<PQ::EuclideanLoss>(td);
-        kmeans_correctness_test<PQ::ProductLoss>(td);
+        kmeans_correctness_test<EuclideanLoss>(td);
+        kmeans_correctness_test<ProductLoss>(td);
     }
 
     TEST_CASE("basic euclidean clustering 4")
@@ -163,7 +166,7 @@ namespace kmeans
             {0.60197578, 0.85449163},
             {0.12894223, 0.2116554},
             {0.65555375, 0.13147274}};
-        kmeans_correctness_test<PQ::EuclideanLoss>(td);
-        kmeans_correctness_test<PQ::ProductLoss>(td);
+        kmeans_correctness_test<EuclideanLoss>(td);
+        kmeans_correctness_test<ProductLoss>(td);
     }
 } // namespace kmeans

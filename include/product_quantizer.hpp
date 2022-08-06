@@ -14,8 +14,11 @@
 
 namespace PQ{
 
+using namespace util;
+
 struct Estimator
 {
+
 
 private:
     const size_t m_;
@@ -82,7 +85,16 @@ public:
     // Returns memory usage in bytes
     uint64_t memory_usage();
 
+    // Returns a copy of the codebook without padding
+    // Returned vector contains M elements each of which is a data_t
+    // with size K x D/M (some are 1 larger to accomodate when D % M != 0)
+    std::vector<data_t> getCodebook();
+
     Estimator getEstimator(const std::vector<float> &query) const;
+
+    // returns product quantization code of the vector at index `idx` in the dataset
+    // the returned vector will always be of length m (number of subspaces)
+    std::vector<uint8_t> getCode(size_t idx);
 
 private:
     // builds the codebook (is called by constructor)
@@ -95,14 +107,14 @@ private:
 
 
 template<class TLoss>
-ProductQuantizer<TLoss>::ProductQuantizer(data_t &data, size_t m_subspaces, size_t k_cluster=256)
+ProductQuantizer<TLoss>::ProductQuantizer(data_t &data, size_t m_subspaces, size_t k_clusters)
 :m_(m_subspaces),
 dims_(data[0].size()),
 k_(k_clusters),
 n_(data.size()),
 data_(data),
 codebook_(m_),
-subspace_sizes(m_, dims_/m_)
+subspace_sizes_(m_, dims_/m_)
 {
     assert(k_ <= 256);
     assert(k_ <= n_);
@@ -119,6 +131,9 @@ subspace_sizes(m_, dims_/m_)
 }
 
 template<class TLoss>
+ProductQuantizer<TLoss>::~ProductQuantizer() {}
+
+template<class TLoss>
 data_t ProductQuantizer<TLoss>::getSubspace(const size_t m_index, const bool sample)
 {
     assert(m_index < m_);
@@ -127,13 +142,16 @@ data_t ProductQuantizer<TLoss>::getSubspace(const size_t m_index, const bool sam
     if (sample)
         sample_size = std::min(n_, kSampleSize);
 
-    std::vector<size_t> s_idcs = util::randomSample(sample_size, n_);
+    std::vector<size_t> s_idcs = randomSample(sample_size, n_);
     std::sort(s_idcs.begin(), s_idcs.end()); // Such that order is maintained when the sample is the whole dataset
 
     data_t subspace;
+    size_t start_d = std::accumulate(&subspace_sizes_[0],&subspace_sizes_[m_index], 0uL);
     for (size_t sample_index : s_idcs)
     {
-        subspace.push_back(data_[sample_index]);
+        const float * start = &data_[sample_index][start_d];
+        const float * end   = &data_[sample_index][start_d + subspace_sizes_[m_index]];
+        subspace.emplace_back(start, end);
     }
     return subspace;
 }
@@ -141,8 +159,7 @@ data_t ProductQuantizer<TLoss>::getSubspace(const size_t m_index, const bool sam
 template<class TLoss>
 void ProductQuantizer<TLoss>::build()
 {
-    KMeans<TLoss> kmeans(k_); 
-    for(size_t m_index = 0; m_index < M ; m_index++)
+    for(size_t m_index = 0; m_index < m_ ; m_index++)
     {
         //std::cout << "creating codebook for subspace " << m_index << std::endl;
 
@@ -151,17 +168,18 @@ void ProductQuantizer<TLoss>::build()
         
         // Store centroids to codebook
         data_t subspace = getSubspace(m_index, true);
+
+        KMeans<TLoss> kmeans(k_); 
         kmeans.fit(subspace);
-        data_t centroids;
         for (Cluster &c : kmeans.clusters_)
         {
-            codebook[m_index].push_back(c.centroid);
+            codebook_[m_index].push_back(c.centroid);
         }
-        assert(centroids.size() == k_);
+        assert(codebook_[m_index].size() == k_);
 
         // Stores the assignemnt of points for the PQ code
         subspace = getSubspace(m_index, false);
-        std::vector<uin8_t> assignments = kmeans.getAssignment(subspace);
+        std::vector<uint8_t> assignments = kmeans.getAssignment(subspace);
         for (size_t i = 0u; i < n_; i++)
         {
             codes_[m_ * i + m_index] = assignments[i]; // TODO: make this write be sequential
@@ -175,12 +193,12 @@ template<class TLoss>
 Estimator ProductQuantizer<TLoss>::getEstimator(const std::vector<float> &query) const
 {
     assert(query.size() == dims_);
-    Estimator e(query, codes_, m_, k_, n_);
+    Estimator est(query, codes_, m_, k_);
 
     // No vector will be larger than this
     float padded_query[codebook_[0][0].size()];
 
-    float *q_start = &query[0];
+    const float *q_start = &query[0];
     for(size_t m_index = 0u; m_index < m_; m_index++)
     {
         // No need to fill in pad, as the other vectors should have padding which is enough
@@ -190,10 +208,10 @@ Estimator ProductQuantizer<TLoss>::getEstimator(const std::vector<float> &query)
         size_t pad_dims = codebook_[m_index][0].size();
         for (size_t k_index = 0u; k_index < k_; k_index++)
         {
-            e.distances[m_index * k_ + k_index] = Math::innerProduct(PTR_START(codebook_[m_index], k_index), padded_query, pad_dims);
+            est.distances[m_index * k_ + k_index] = innerProduct(PTR_START(codebook_[m_index], k_index), padded_query, pad_dims);
         }
     }
-    return e;
+    return est;
 }
 
 double Estimator::estimate(const size_t idx)
@@ -206,4 +224,29 @@ double Estimator::estimate(const size_t idx)
     return inner_product;
 }
 
+template<class TLoss>
+std::vector<data_t> ProductQuantizer<TLoss>::getCodebook()
+{
+    std::vector<data_t> clean_cb(m_);
+    for (size_t m_index = 0; m_index < m_; m_index++)
+    {
+        for (const std::vector<float> &codeword : codebook_[m_index])
+        {
+            const float * start  = &codeword[0];
+            const float * end    = &codeword[subspace_sizes_[m_index]];
+            clean_cb[m_index].emplace_back(start, end);
+        }
+    }
+    return clean_cb;
+}
+
+template<class TLoss>
+std::vector<uint8_t> ProductQuantizer<TLoss>::getCode(size_t idx)
+{
+    return std::vector<uint8_t>(codes_ + (idx*m_), codes_ + ( (idx+1) * m_ ) );
+
+}
+
+
 } // namespace PQ
+

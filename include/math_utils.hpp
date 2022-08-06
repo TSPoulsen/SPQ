@@ -9,7 +9,7 @@
 #include <vector>
 #include <random>
 
-namespace PQ 
+namespace PQ::util
 {
     using data_t = std::vector<std::vector<float>>;
 
@@ -22,6 +22,7 @@ namespace PQ
     // If sample_size == data_size, it returns a random permutation of indicies
     std::vector<size_t> randomSample(size_t sample_size, size_t data_size)
     {
+        assert(sample_size <= data_size);
         std::random_device rd; // obtain a random number from hardware
         std::mt19937 gen(rd()); // seed the generator
         assert(sample_size <= data_size);
@@ -42,8 +43,6 @@ namespace PQ
         return res;
     }
 
-namespace Math
-{
 #ifdef __AVX2__
     float innerProduct(const float *v1, const float *v2, const size_t size)
     {
@@ -84,5 +83,4 @@ namespace Math
 
 #endif
 
-}
 }

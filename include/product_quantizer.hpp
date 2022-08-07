@@ -18,7 +18,9 @@ using namespace util;
 
 struct Estimator
 {
-
+    // Cant get this one to work - i.e. only this function has access to constructor
+    //template<class TL> friend Estimator ProductQuantizer<TL>::getEstimator(const std::vector<float> &query) const;
+    template<class TLoss> friend class ProductQuantizer;
 
 private:
     const size_t m_;
@@ -31,6 +33,7 @@ public:
     const uint8_t * const codes;
     // Distances between query and codewords in the codebook (M x K array)
     double *distances;
+private:
 
     Estimator(const std::vector<float> vec, const uint8_t * const code_ptr, const size_t M, const size_t K):
         m_(M),
@@ -41,6 +44,7 @@ public:
         distances = new double[M*K];
     }
 
+public:
     ~Estimator()
     {
         delete distances;
@@ -61,7 +65,7 @@ private:
     const size_t n_;
     const size_t dims_;
 
-    data_t &data_;
+    const data_t &data_;
     //codebook that contains m*k centroids
     std::vector<data_t> codebook_;
     std::vector<size_t> subspace_sizes_;
@@ -78,7 +82,7 @@ public:
     ///@param m Number of subspaces to split the vectors in, distributes sizes as uniformely as possible
     ///@param k Number of clusters for each subspace, build using kmeans
 
-    ProductQuantizer(data_t &data, size_t m_subspaces=8, size_t k_clusters=256);
+    ProductQuantizer(const data_t &data, size_t m_subspaces=8, size_t k_clusters=256);
 
     ~ProductQuantizer();
 
@@ -107,7 +111,7 @@ private:
 
 
 template<class TLoss>
-ProductQuantizer<TLoss>::ProductQuantizer(data_t &data, size_t m_subspaces, size_t k_clusters)
+ProductQuantizer<TLoss>::ProductQuantizer(const data_t &data, size_t m_subspaces, size_t k_clusters)
 :m_(m_subspaces),
 dims_(data[0].size()),
 k_(k_clusters),

@@ -5,7 +5,9 @@
 #include "loss/euclidean_loss.hpp"
 #include "loss/product_loss.hpp"
 #include "loss/weighted_loss.hpp"
+
 #include <set>
+#include <functional>
 
 namespace product_quantizer{
 
@@ -69,10 +71,16 @@ namespace product_quantizer{
 
     }
 
-
-    // As we have enough clusters represent all points there should be no error 
     template<class TLoss>
-    void noErrorTest()
+    void errorTest(const data_t &data, const size_t m, const size_t k, std::function<bool(double)> condition)
+    {
+        ProductQuantizer<TLoss> quantizer(data, m, k);
+        double q_err = calcQauntizationError<TLoss>(data, quantizer);
+        REQUIRE(condition(q_err));
+    }
+
+    template<class TLoss>
+    void getCodebookTest()
     {
         unsigned int N = 8, dims = 4, m = 4, k  = 8;
         data_t data = {     {-4.0, 1.0, -8.0, 1.0},
@@ -83,73 +91,200 @@ namespace product_quantizer{
                             {2.0 , 6.0, -3.0, 6.0},
                             {3.0 , 7.0, -2.0, 7.0},
                             {4.0 , 8.0, -1.0, 8.0}};
+        SECTION("M=1,K=1")
+        {
+            size_t  m = 1,
+                    k = 1;
+            ProductQuantizer<TLoss> quantizer(data, m, k);
+            std::vector<data_t> cb = quantizer.getCodebook();
+            REQUIRE(cb.size() == m);
+            for (const data_t &sub_cb : cb)
+            {
+                REQUIRE(sub_cb.size() == k);
+                for (const auto &vec : sub_cb)
+                {
+                    REQUIRE(vec.size() == 4);
+                }
+            }
+        }
 
-        ProductQuantizer<TLoss> quantizer(data, m, k);
+        SECTION("M=4,K=1")
+        {
+            size_t  m = 4,
+                    k = 1;
+            ProductQuantizer<TLoss> quantizer(data, m, k);
+            std::vector<data_t> cb = quantizer.getCodebook();
+            REQUIRE(cb.size() == m);
+            for (const data_t &sub_cb : cb)
+            {
+                REQUIRE(sub_cb.size() == k);
+                for (const auto &vec : sub_cb)
+                {
+                    REQUIRE(vec.size() == 1);
+                }
+            }
+        }
 
-        double q_err = calcQauntizationError<TLoss>(data, quantizer);
-        REQUIRE(q_err == 0.0);
+        SECTION("M=1,K=8")
+        {
+            size_t  m = 1,
+                    k = 1;
+            ProductQuantizer<TLoss> quantizer(data, m, k);
+            std::vector<data_t> cb = quantizer.getCodebook();
+            REQUIRE(cb.size() == m);
+            for (const data_t &sub_cb : cb)
+            {
+                REQUIRE(sub_cb.size() == k);
+                for (const auto &vec : sub_cb)
+                {
+                    REQUIRE(vec.size() == 4);
+                }
+            }
+        }
+
+    }
+
+    TEST_CASE("ProductQuantizer getCodebook EuclideanLoss")
+    {
+        getCodebookTest<EuclideanLoss>();
+    }
+
+    TEST_CASE("ProductQuantizer getCodebook ProductLoss")
+    {
+        getCodebookTest<ProductLoss>();
     }
 
     TEST_CASE("ProductQuantizer No error")
     {
+        data_t data = {     {-4.0, 1.0, -8.0, 1.0},
+                            {-3.0, 2.0, -7.0, 2.0},
+                            {-2.0, 3.0, -6.0, 3.0},
+                            {-1.0, 4.0, -5.0, 4.0},
+                            {1.0 , 5.0, -4.0, 5.0},
+                            {2.0 , 6.0, -3.0, 6.0},
+                            {3.0 , 7.0, -2.0, -7.0},
+                            {4.0 , 8.0, -1.0, -8.0}};
+        size_t m = 4, k = 8;
+        std::function<bool(double)> is_zero = [](double err) {return err == 0;};
         SECTION("EuclideanLoss")
         {
-            noErrorTest<EuclideanLoss>();
+            errorTest<EuclideanLoss>(data, m, k, is_zero);
         }
         SECTION("ProductLoss")
         {
-            noErrorTest<ProductLoss>();
+            errorTest<ProductLoss>(data, m, k, is_zero);
         }
         //SECTION("WeightedProductLoss")
         //{
-            //noErrorTest<WeightedProductLoss>();
+            //errorTest<WeightedProductLoss>();
         //}
     }
 
-/*
-    TEST_CASE("PQFilter generate correct PQcodes 2") {
-        unsigned int N = 4, dims = 4, m = 4, k = 2;
-        std::vector<float>  data[N] = {
-                                        {-4.0, 1.0, -8.0, 1.0},
-                                        {-4.0, 1.0,  8.0,-1.0},
-                                        { 4.0,-1.0, -8.0, 1.0},
-                                        { 4.0,-1.0,  8.0,-1.0}};
-
-        Dataset<UnitVectorFormat> dataset(dims, N);
-        for (auto entry: data){
-            dataset.insert(entry);
+    TEST_CASE("ProductQuantizer No error 2") 
+    {
+        data_t  data = {{-4.0, 1.0, -8.0, 1.0},
+                        {-4.0, 1.0,  8.0,-1.0},
+                        { 4.0,-1.0, -8.0, 1.0},
+                        { 4.0,-1.0,  8.0,-1.0}};
+        size_t m = 2, k = 2;
+        std::function<bool(double)> is_zero = [](double err) {return err == 0;};
+        SECTION("EuclideanLoss")
+        {
+            errorTest<EuclideanLoss>(data, m, k, is_zero);
         }
-        PQFilter pq1(dataset, m,k);
-        pq1.rebuild();
-        //pq1.showCodebook();
-        //Since cluster 0 might not have the same values each time
-        //we have to use the quantization error to see if we are generating the correct PQcodes
-        REQUIRE(0.0 == pq1.totalQuantizationError());
+        SECTION("ProductLoss")
+        {
+            errorTest<ProductLoss>(data, m, k, is_zero);
+        }
     }
 
-    TEST_CASE("PQFilter generate PQcodes with some Quantization Error") {
-        unsigned int N = 6, dims = 4, m = 4, k = 2;
-        std::vector<float>  data[N] = {
-                                        {-4.0, 1.0, -8.0, 1.0},
-                                        {-4.0, 1.0,  8.0,-1.0},
-                                        { 4.0,-1.0, -8.0, 1.0},
-                                        { 4.0,-1.0,  8.0,-1.0},
-                                        { 1.0, 0.0,  1.0, 0.0},
-                                        { 0.0,-1.0,  0.0,-1.0},
-                                        };
+    TEST_CASE("ProductQuantizer Some error") 
+    {
+        data_t data = { {-4.0, 1.0, -8.0, 1.0},
+                        {-4.0, 1.0,  8.0,-1.0},
+                        { 4.0,-1.0, -8.0, 1.0},
+                        { 4.0,-1.0,  8.0,-1.0},
+                        { 1.0, 0.0,  1.0, 0.0},
+                        { 0.0,-1.0,  0.0,-1.0}};
+        size_t m = 4, k = 2;
 
-        Dataset<UnitVectorFormat> dataset(dims, N);
-        for (auto entry: data){
-            dataset.insert(entry);
+        std::function<bool(double)> gt_zero = [](double err) {return err > 0;};
+        SECTION("EuclideanLoss")
+        {
+            errorTest<EuclideanLoss>(data, m, k, gt_zero);
         }
-        PQFilter pq1(dataset, m,k);
-        pq1.rebuild(); 
-
-        //Since cluster 0 might not have the same values each time
-        //we have to use the quantization error to see if we are generating the correct PQcodes
-        REQUIRE(0.0 != pq1.totalQuantizationError());
+        SECTION("ProductLoss")
+        {
+            errorTest<ProductLoss>(data, m, k, gt_zero);
+        }
     }
     
+    TEST_CASE("ProductQuantizer getEstimator")
+    {
+        std::cout << "Enter TEST" << std::endl;
+        data_t data = {     {-4.0, 1.0, -8.0, 1.0},
+                            {-3.0, 2.0, -7.0, 2.0},
+                            {-2.0, 3.0, -6.0, 3.0},
+                            {-1.0, 4.0, -5.0, 4.0},
+                            {1.0 , 5.0, -4.0, 5.0},
+                            {2.0 , 6.0, -3.0, 6.0},
+                            {3.0 , 7.0, -2.0, -7.0},
+                            {4.0 , 8.0, -1.0, -8.0}};
+        size_t m = 4, k = 8;
+        std::vector<float> query = {1.0, 1.0, 1.0, 1.0};
+        ProductQuantizer<EuclideanLoss> quantizer(data, m, k);
+        Estimator est = quantizer.getEstimator(query);
+        // The following code should not cause a segmentation fault
+        double sum_dist = 0;
+
+        SECTION("M=0")
+        {
+            std::cout << "INSIDE SECTION" << std::endl;
+            for (size_t k_i = 0; k_i < k; k_i++)
+            {
+                sum_dist += est.distances[k_i];
+            }
+            CHECK(sum_dist == 0);
+        }
+        SECTION("M=1")
+        {
+            for (size_t k_i = 0; k_i < k; k_i++)
+            {
+                sum_dist += est.distances[k + k_i];
+            }
+            CHECK(sum_dist == 36.0);
+        }
+        SECTION("M=2")
+        {
+            for (size_t k_i = 0; k_i < k; k_i++)
+            {
+                sum_dist += est.distances[2*k + k_i];
+            }
+            CHECK(sum_dist == -36.0);
+        }
+        SECTION("M=3")
+        {
+            for (size_t k_i = 0; k_i < k; k_i++)
+            {
+                sum_dist += est.distances[3*k + k_i];
+            }
+            CHECK(sum_dist == 6.0);
+        }
+
+        SECTION("ESTIMATIONS")
+        {
+            CHECK(est.estimate(0) == -10.0);
+            CHECK(est.estimate(1) == -6.0);
+            CHECK(est.estimate(2) == -2.0);
+            CHECK(est.estimate(3) == 2.0);
+            CHECK(est.estimate(4) == 7.0);
+            CHECK(est.estimate(5) == 11.0);
+            CHECK(est.estimate(6) == 1.0);
+            CHECK(est.estimate(7) == 3.0);
+        }
+
+    }
+/*
     TEST_CASE("precomp test") {
         unsigned int N = 8, dims = 4, m = 4, k  = 4;
         std::vector<float>  data[N] = {

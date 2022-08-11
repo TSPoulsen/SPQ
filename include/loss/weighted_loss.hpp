@@ -110,6 +110,7 @@ data_t WeightedProductLoss::initCentroids(const size_t K)
 
 
 // TODO
+// I think theorem 4.2 suffices
 std::vector<float> WeightedProductLoss::getCentroid(const std::vector<unsigned int> &members) const 
 {
     return std::vector<float>();

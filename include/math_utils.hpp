@@ -13,6 +13,7 @@ namespace PQ::util
 {
     using data_t = std::vector<std::vector<float>>;
 
+
     inline const float* PTR_START(const data_t& data_ref, const size_t idx)
     {
         return &(data_ref[idx][0]);
@@ -82,5 +83,70 @@ namespace PQ::util
     }
 
 #endif
+
+namespace internal
+{
+    // Scales all values in row by a factor k
+    inline void scaleRow(std::vector<float> &row, const float k)
+    {
+        for (size_t c = 0; c < row.size(); c++) {
+            row[c] = k* row[c];
+        }
+    }
+
+    // row2 += k * row1
+    inline void combineRows(const std::vector<float> &row1, std::vector<float> &row2, const float k)
+    {
+        for (std::size_t c = 0; c < row2.size(); c++)
+        {
+            row2[c] += row1[c] * k;
+        }
+    }
+}
+
+    // Input argument matrix is altered throughout the process
+    data_t inverse(data_t &matrix)
+    {
+        size_t n = matrix.size();
+        assert(n == matrix[0].size());
+
+        // set up mean as identity
+        data_t result(n, std::vector<float>(n, 0));
+        for (size_t i = 0; i < n; i++) 
+        {
+            result[i][i] = 1.0;
+        }
+        
+        // Eliminate L
+        for (size_t col = 0; col < n; col++) 
+        {
+            double diag = matrix[col][col];
+            for (std::size_t row = col + 1; row < n; row++) 
+            {
+                float target = matrix[row][col];
+                float a = -target / diag;
+                internal::combineRows(matrix[col], matrix[row], a);
+                internal::combineRows(result[col], result[row], a);
+            }
+            internal::scaleRow(matrix[col], 1.0 / diag);
+            internal::scaleRow(result[col], 1.0 / diag);
+        }
+        // Eliminate U
+        for (size_t col = n - 1; col >= 1; col--) 
+        {
+            double diag = matrix[col][col];
+            for (size_t row_plus_one = col; row_plus_one > 0; row_plus_one--)
+            {
+                size_t row = row_plus_one - 1;
+                double target = matrix[row][col];
+                double a = -target / diag;
+                internal::combineRows(matrix[col], matrix[row], a);
+                internal::combineRows(result[col], result[row], a);
+            }
+        }
+        return result;
+    }
+
+
 
 }

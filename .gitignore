@@ -6,3 +6,11 @@ build/
 **/*.cmake
 DartConfiguration.tcl
 Testing/
+unittests/kmeans_avx
+unittests/kmeans
+unittests/loss
+unittests/loss_avx
+unittests/math_utils
+unittests/math_utils_avx
+unittests/product_quantizer
+unittests/product_quantizer_avx

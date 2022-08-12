@@ -6,8 +6,8 @@
 // COV
 #include <vector>
 
-#include "math_utils.hpp"
-#include "loss/loss_base.hpp"
+#include "../math_utils.hpp"
+#include "loss_base.hpp"
 
 namespace spq 
 {

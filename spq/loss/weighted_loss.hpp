@@ -7,9 +7,9 @@
 #include <vector>
 #include <iostream>
 
-#include "math_utils.hpp"
-#include "loss/loss_base.hpp"
-#include "kmeans.hpp"
+#include "../math_utils.hpp"
+#include "loss_base.hpp"
+#include "../kmeans.hpp"
 
 namespace spq
 {

@@ -1,10 +1,16 @@
-#define doctest_config_implement_with_main
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 
-#include "product_quantizer.hpp"
-#include "loss/euclidean_loss.hpp"
-#include "loss/product_loss.hpp"
-#include "loss/weighted_loss.hpp"
+#ifdef __AVX2__
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name " AVX")
+#else
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name)
+#endif
+
+#include "spq/product_quantizer.hpp"
+#include "spq/loss/euclidean_loss.hpp"
+#include "spq/loss/product_loss.hpp"
+#include "spq/loss/weighted_loss.hpp"
 
 #include <set>
 #include <functional>
@@ -91,7 +97,7 @@ namespace product_quantizer{
                             {2.0 , 6.0, -3.0, 6.0},
                             {3.0 , 7.0, -2.0, 7.0},
                             {4.0 , 8.0, -1.0, 8.0}};
-        SECTION("M=1,K=1")
+        SUBCASE("M=1,K=1")
         {
             size_t  m = 1,
                     k = 1;
@@ -108,7 +114,7 @@ namespace product_quantizer{
             }
         }
 
-        SECTION("M=4,K=1")
+        SUBCASE("M=4,K=1")
         {
             size_t  m = 4,
                     k = 1;
@@ -125,7 +131,7 @@ namespace product_quantizer{
             }
         }
 
-        SECTION("M=1,K=8")
+        SUBCASE("M=1,K=8")
         {
             size_t  m = 1,
                     k = 1;
@@ -144,17 +150,17 @@ namespace product_quantizer{
 
     }
 
-    TEST_CASE("ProductQuantizer getCodebook EuclideanLoss")
+    AVX_TEST_CASE("ProductQuantizer getCodebook EuclideanLoss")
     {
         getCodebookTest<EuclideanLoss>();
     }
 
-    TEST_CASE("ProductQuantizer getCodebook ProductLoss")
+    AVX_TEST_CASE("ProductQuantizer getCodebook ProductLoss")
     {
         getCodebookTest<ProductLoss>();
     }
 
-    TEST_CASE("ProductQuantizer No error")
+    AVX_TEST_CASE("ProductQuantizer No error")
     {
         data_t data = {     {-4.0, 1.0, -8.0, 1.0},
                             {-3.0, 2.0, -7.0, 2.0},
@@ -166,21 +172,21 @@ namespace product_quantizer{
                             {4.0 , 8.0, -1.0, -8.0}};
         size_t m = 4, k = 8;
         std::function<bool(double)> is_zero = [](double err) {return err == 0;};
-        SECTION("EuclideanLoss")
+        SUBCASE("EuclideanLoss")
         {
             errorTest<EuclideanLoss>(data, m, k, is_zero);
         }
-        SECTION("ProductLoss")
+        SUBCASE("ProductLoss")
         {
             errorTest<ProductLoss>(data, m, k, is_zero);
         }
-        //SECTION("WeightedProductLoss")
+        //SUBCASE("WeightedProductLoss")
         //{
             //errorTest<WeightedProductLoss>();
         //}
     }
 
-    TEST_CASE("ProductQuantizer No error 2") 
+    AVX_TEST_CASE("ProductQuantizer No error 2") 
     {
         data_t  data = {{-4.0, 1.0, -8.0, 1.0},
                         {-4.0, 1.0,  8.0,-1.0},
@@ -188,17 +194,17 @@ namespace product_quantizer{
                         { 4.0,-1.0,  8.0,-1.0}};
         size_t m = 2, k = 2;
         std::function<bool(double)> is_zero = [](double err) {return err == 0;};
-        SECTION("EuclideanLoss")
+        SUBCASE("EuclideanLoss")
         {
             errorTest<EuclideanLoss>(data, m, k, is_zero);
         }
-        SECTION("ProductLoss")
+        SUBCASE("ProductLoss")
         {
             errorTest<ProductLoss>(data, m, k, is_zero);
         }
     }
 
-    TEST_CASE("ProductQuantizer Some error") 
+    AVX_TEST_CASE("ProductQuantizer Some error") 
     {
         data_t data = { {-4.0, 1.0, -8.0, 1.0},
                         {-4.0, 1.0,  8.0,-1.0},
@@ -209,17 +215,17 @@ namespace product_quantizer{
         size_t m = 4, k = 2;
 
         std::function<bool(double)> gt_zero = [](double err) {return err > 0;};
-        SECTION("EuclideanLoss")
+        SUBCASE("EuclideanLoss")
         {
             errorTest<EuclideanLoss>(data, m, k, gt_zero);
         }
-        SECTION("ProductLoss")
+        SUBCASE("ProductLoss")
         {
             errorTest<ProductLoss>(data, m, k, gt_zero);
         }
     }
     
-    TEST_CASE("ProductQuantizer getEstimator")
+    AVX_TEST_CASE("ProductQuantizer getEstimator")
     {
         std::cout << "Enter TEST" << std::endl;
         data_t data = {     {-4.0, 1.0, -8.0, 1.0},
@@ -237,16 +243,15 @@ namespace product_quantizer{
         // The following code should not cause a segmentation fault
         double sum_dist = 0;
 
-        SECTION("M=0")
+        SUBCASE("M=0")
         {
-            std::cout << "INSIDE SECTION" << std::endl;
             for (size_t k_i = 0; k_i < k; k_i++)
             {
                 sum_dist += est.distances[k_i];
             }
             CHECK(sum_dist == 0);
         }
-        SECTION("M=1")
+        SUBCASE("M=1")
         {
             for (size_t k_i = 0; k_i < k; k_i++)
             {
@@ -254,7 +259,7 @@ namespace product_quantizer{
             }
             CHECK(sum_dist == 36.0);
         }
-        SECTION("M=2")
+        SUBCASE("M=2")
         {
             for (size_t k_i = 0; k_i < k; k_i++)
             {
@@ -262,7 +267,7 @@ namespace product_quantizer{
             }
             CHECK(sum_dist == -36.0);
         }
-        SECTION("M=3")
+        SUBCASE("M=3")
         {
             for (size_t k_i = 0; k_i < k; k_i++)
             {
@@ -271,7 +276,7 @@ namespace product_quantizer{
             CHECK(sum_dist == 6.0);
         }
 
-        SECTION("ESTIMATIONS")
+        SUBCASE("ESTIMATIONS")
         {
             CHECK(est.estimate(0) == -10.0);
             CHECK(est.estimate(1) == -6.0);
@@ -285,7 +290,7 @@ namespace product_quantizer{
 
     }
 /*
-    TEST_CASE("precomp test") {
+    AVX_TEST_CASE("precomp test") {
         unsigned int N = 8, dims = 4, m = 4, k  = 4;
         std::vector<float>  data[N] = {
                                         {-4.0, 1.0, -8.0, 1.0},
@@ -313,7 +318,7 @@ namespace product_quantizer{
     }
     
     /*
-    TEST_CASE("AsymmetricFast Test"){
+    AVX_TEST_CASE("AsymmetricFast Test"){
         std::vector<float> input[30] = {
             {-1.82445727,  0.04013046},
             { 0.28121734, -0.25688856},

@@ -8,7 +8,7 @@
 #include <vector>
 #include <cfloat>
 
-#include "math_utils.hpp"
+#include "../math_utils.hpp"
 
 
 namespace spq

@@ -1,6 +1,12 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 
+#ifdef __AVX2__
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name " AVX")
+#else
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name)
+#endif
+
 #include "spq/kmeans.hpp"
 #include "spq/loss/euclidean_loss.hpp"
 #include "spq/loss/product_loss.hpp"
@@ -40,7 +46,7 @@ namespace kmeans
             // std::cout << "should make it to heare" << std::endl;
             for (size_t d = 0; d < dims; d++)
             {
-                are_equal = (are_equal && (run_i[d] == Approx(real_i[d])));
+                are_equal = (are_equal && (run_i[d] == doctest::Approx(real_i[d])));
                 // std::cout << "ans: " << run_i[d] << " correct: " << real_i[d] << " what it evaluates to: " << (run_i[d] == (Approx(real_i[d]))) <<  " are equal: " << are_equal << std::endl;
             }
             it_run++;
@@ -75,7 +81,7 @@ namespace kmeans
         REQUIRE(are_equal);
     }
 
-    TEST_CASE("basic euclidean clustering 1")
+    AVX_TEST_CASE("basic euclidean clustering 1")
     {
         struct TestData td;
         td.N = 4;
@@ -94,7 +100,7 @@ namespace kmeans
         return;
     }
 
-    TEST_CASE("basic euclidean clustering 2")
+    AVX_TEST_CASE("basic euclidean clustering 2")
     {
         struct TestData td;
         td.N = 8;
@@ -121,7 +127,7 @@ namespace kmeans
         return;
     }
 
-    TEST_CASE("basic euclidean clustering 3")
+    AVX_TEST_CASE("basic euclidean clustering 3")
     {
         struct TestData td;
         td.N = 8;
@@ -148,7 +154,7 @@ namespace kmeans
         kmeans_correctness_test<ProductLoss>(td);
     }
 
-    TEST_CASE("basic euclidean clustering 4")
+    AVX_TEST_CASE("basic euclidean clustering 4")
     {
         struct TestData td;
         td.N = 8;

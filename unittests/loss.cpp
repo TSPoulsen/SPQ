@@ -1,10 +1,16 @@
-#define doctest_config_implement_with_main
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 
-#include "loss/loss_base.hpp"
-#include "loss/euclidean_loss.hpp"
-#include "loss/product_loss.hpp"
-#include "loss/weighted_loss.hpp"
+#ifdef __AVX2__
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name " AVX")
+#else
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name)
+#endif
+
+#include "spq/loss/loss_base.hpp"
+#include "spq/loss/euclidean_loss.hpp"
+#include "spq/loss/product_loss.hpp"
+#include "spq/loss/weighted_loss.hpp"
 
 #include <iostream>
 #include <set>
@@ -14,7 +20,7 @@ namespace loss
     using namespace spq;
     using namespace spq::util;
 
-    TEST_CASE("EuclideanLoss distance Test")
+    AVX_TEST_CASE("EuclideanLoss distance Test")
     {
         data_t vectors = {{0, 0, 0, 0},
                               {-1, 0, 0, 1},
@@ -40,7 +46,7 @@ namespace loss
         }
     }
 
-    TEST_CASE("EuclideanLoss/ProductLoss getCentroid Test")
+    AVX_TEST_CASE("EuclideanLoss/ProductLoss getCentroid Test")
     {
         data_t vectors = {{0, 0, 0, 0},
                               {-1, 0, 0, 1},
@@ -54,7 +60,7 @@ namespace loss
                           {0.5, 0.5, 0.5, 0.5}};
         EuclideanLoss loss;
         loss.init(vectors);
-        size_t ans_p = loss.padData(ans);
+        loss.padData(ans);
         for (size_t i = 0; i < ans.size(); i++)
         {
             std::vector<float> guess = loss.getCentroid(all_members[i]);
@@ -62,7 +68,7 @@ namespace loss
         }
     }
 
-    TEST_CASE("LossDefault initCentroids Test")
+    AVX_TEST_CASE("LossDefault initCentroids Test")
     {
         data_t vectors = {{0, 0, 0, 0},
                               {1, 0, 0, 1},
@@ -81,7 +87,7 @@ namespace loss
         }
     }
 
-    TEST_CASE("ProductLoss covariance creation Test")
+    AVX_TEST_CASE("ProductLoss covariance creation Test")
     {
         data_t vectors = {{0, 0, 0, 0},
                               {-1, 0, 0, 1},
@@ -101,7 +107,7 @@ namespace loss
         }
     }
 
-    TEST_CASE("ProductLoss distance Test")
+    AVX_TEST_CASE("ProductLoss distance Test")
     {
         data_t vectors = {{0, 0, 0, 0},
                               {-1, 0, 0, 1},
@@ -121,12 +127,12 @@ namespace loss
         {
             for (int j = 0; j < 5; j++)
             {
-                CHECK(loss.distance(i, vectors[j]) == Approx(ans[i][j]));
+                CHECK(loss.distance(i, vectors[j]) == doctest::Approx(ans[i][j]));
             }
         }
     }
 
-    TEST_CASE("WeightedProductLoss scalings Test")
+    AVX_TEST_CASE("WeightedProductLoss scalings Test")
     {
         // This proxy only works for large dimensionality
 
@@ -136,7 +142,7 @@ namespace loss
                               std::vector<float>(100,-1)};
         WeightedProductLoss loss;
 
-        SECTION ("T=0.0")
+        SUBCASE("T=0.0")
         {
             loss.init(vectors);
             for (size_t i = 0; i < vectors.size(); i++)
@@ -144,40 +150,40 @@ namespace loss
                 CHECK(loss.getScaling(i) == 1.0);
             }
         }
-        SECTION ("T=0.2")
+        SUBCASE("T=0.2")
         {
             loss.init(vectors, 0.2);
             CHECK(loss.getScaling(0) != loss.getScaling(0));
             double ans[3] = {0.040,0.010, 0.040};
             for (size_t i = 1; i < vectors.size(); i++)
             {
-                CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
+                CHECK(loss.getScaling(i) == doctest::Approx(ans[i-1]).epsilon(0.001));
             }
 
         }
-        SECTION ("T=1.0")
+        SUBCASE("T=1.0")
         {
             loss.init(vectors, 1.0);
             double ans[3] = {1.010, 0.2506, 1.010};
             for (size_t i = 1; i < vectors.size(); i++)
             {
-                CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
+                CHECK(loss.getScaling(i) == doctest::Approx(ans[i-1]).epsilon(0.001));
             }
         }
 
-        SECTION ("T=9.0")
+        SUBCASE("T=9.0")
         {
             loss.init(vectors, 9.0);
             double ans[3] = {426.326, 25.39, 426.326};
             for (size_t i = 1; i < vectors.size(); i++)
             {
-                CHECK(loss.getScaling(i) == Approx(ans[i-1]).epsilon(0.001));
+                CHECK(loss.getScaling(i) == doctest::Approx(ans[i-1]).epsilon(0.001));
             }
         }
 
     }
 
-    TEST_CASE("WeightedProductLoss distance test")
+    AVX_TEST_CASE("WeightedProductLoss distance test")
     {
         data_t vectors = {{0, 0, 0, 0},
                               {-1, 0, 0, 1},
@@ -187,7 +193,7 @@ namespace loss
 
 
         WeightedProductLoss loss;
-        SECTION ("T=0.0")
+        SUBCASE("T=0.0")
         {
             loss.init(vectors, 0.0);
             // dist(i,j)
@@ -201,11 +207,11 @@ namespace loss
             {
                 for (size_t j = 0; j < vectors.size(); j++)
                 {
-                    CHECK(loss.distance(i,vectors[j]) ==  Approx(ans[i][j]).epsilon(0.001));
+                    CHECK(loss.distance(i,vectors[j]) ==  doctest::Approx(ans[i][j]).epsilon(0.001));
                 }
             }
         }
-        SECTION ("T=0.2")
+        SUBCASE("T=0.2")
         {
             loss.init(vectors, 0.2);
             // dist(i,j)
@@ -219,13 +225,13 @@ namespace loss
             {
                 for (size_t j = 0; j < vectors.size(); j++)
                 {
-                    CHECK(loss.distance(i,vectors[j]) ==  Approx(ans[i][j]).epsilon(0.001));
+                    CHECK(loss.distance(i,vectors[j]) ==  doctest::Approx(ans[i][j]).epsilon(0.001));
                 }
             }
         }
     }
 
-    TEST_CASE("WeigtedProductLoss initCentroids Test")
+    AVX_TEST_CASE("WeigtedProductLoss initCentroids Test")
     {
         data_t vectors = {{0, 0, 0, 0},
                               {1, 0, 0, 1},

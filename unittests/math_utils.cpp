@@ -1,6 +1,12 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 
+#ifdef __AVX2__
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name " AVX")
+#else
+    #define AVX_TEST_CASE(name) DOCTEST_TEST_CASE(name)
+#endif
+
 #include "spq/math_utils.hpp"
 
 #include <iostream>
@@ -12,7 +18,7 @@ namespace math_utils
     using namespace spq;
     using namespace spq::util;
 
-    TEST_CASE("innerProduct Test")
+    AVX_TEST_CASE("innerProduct Test")
     {
         data_t vectors = {{0, 0, 0, 0, 0, 0, 0, 0},
                               {1, 0, 0, 1, 0, 0, 0, 0},
@@ -34,7 +40,7 @@ namespace math_utils
             }
         }
     }
-    TEST_CASE("innerProduct Test (large)")
+    AVX_TEST_CASE("innerProduct Test (large)")
     {
         data_t vectors = {std::vector<float>(128,0),
                               std::vector<float>(128,1),
@@ -54,7 +60,7 @@ namespace math_utils
         }
     }
 
-    TEST_CASE("randomSample Test")
+    AVX_TEST_CASE("randomSample Test")
     {
         SUBCASE("Actual Sample")
         {
@@ -75,7 +81,7 @@ namespace math_utils
 
     }
 
-    TEST_CASE("Matrix Inverse Identity Matrix")
+    AVX_TEST_CASE("Matrix Inverse Identity Matrix ")
     {
         size_t n;
         SUBCASE("N=100")

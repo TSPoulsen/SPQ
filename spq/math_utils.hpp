@@ -5,11 +5,12 @@
 #endif
 
 #include <cstddef>
+#include <assert.h>
 
 #include <vector>
 #include <random>
 
-namespace PQ::util
+namespace spq::util
 {
     using data_t = std::vector<std::vector<float>>;
 

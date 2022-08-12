@@ -8,7 +8,7 @@
 #include "math_utils.hpp"
 #include "loss/loss_base.hpp"
 
-namespace PQ
+namespace spq
 {
     class EuclideanLoss : public LossDefault
     {
@@ -59,4 +59,4 @@ double EuclideanLoss::distance(const size_t idx, const std::vector<float> &v2) c
 
 #endif
 
-} // namespace PQ
+} // namespace spq

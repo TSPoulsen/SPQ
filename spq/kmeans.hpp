@@ -8,7 +8,7 @@
 #include <cfloat>
 #include <iostream>
 
-namespace PQ
+namespace spq
 {
 
 struct Cluster
@@ -178,4 +178,4 @@ std::vector<uint8_t> KMeans<TLoss>::getAssignment(data_t points) const
     }
     return indicies;
 }
-} // PQ
+} // spq

@@ -1,7 +1,7 @@
 # SPQ - _Simply Product Quantization_
 
 ### What is Product Quantization?
-I will suggest [this survey](https://www.jstage.jst.go.jp/article/mta/6/1/6_2/_pdf/), which gives a great overview of what Product Quantization is its use cases.
+I will suggest [this survey](https://www.jstage.jst.go.jp/article/mta/6/1/6_2/_pdf/), which gives a great overview of what Product Quantization is and its use cases.
 
 
 ### Library Details

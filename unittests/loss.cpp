@@ -1,6 +1,6 @@
-#pragma once
+#define doctest_config_implement_with_main
+#include <doctest.h>
 
-#include "catch.hpp"
 #include "loss/loss_base.hpp"
 #include "loss/euclidean_loss.hpp"
 #include "loss/product_loss.hpp"
@@ -11,8 +11,8 @@
 
 namespace loss
 {
-    using namespace PQ;
-    using namespace PQ::util;
+    using namespace spq;
+    using namespace spq::util;
 
     TEST_CASE("EuclideanLoss distance Test")
     {

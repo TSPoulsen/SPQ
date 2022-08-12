@@ -11,7 +11,7 @@
 #include "loss/loss_base.hpp"
 #include "kmeans.hpp"
 
-namespace PQ
+namespace spq
 {
     using namespace util;
 
@@ -116,4 +116,4 @@ std::vector<float> WeightedProductLoss::getCentroid(const std::vector<unsigned i
     return std::vector<float>();
 }
 
-} // namespace PQ
+} // namespace spq

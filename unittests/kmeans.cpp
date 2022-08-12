@@ -1,8 +1,9 @@
-#pragma once
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
 
-#include "kmeans.hpp"
-
-#include "catch.hpp"
+#include "spq/kmeans.hpp"
+#include "spq/loss/euclidean_loss.hpp"
+#include "spq/loss/product_loss.hpp"
 #include <vector>
 #include <iostream>
 #include <set>
@@ -10,8 +11,8 @@
 namespace kmeans
 {
 
-    using namespace PQ;
-    using namespace PQ::util;
+    using namespace spq;
+    using namespace spq::util;
 
     struct TestData
     {

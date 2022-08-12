@@ -9,7 +9,7 @@
 #include "math_utils.hpp"
 #include "loss/loss_base.hpp"
 
-namespace PQ 
+namespace spq 
 {
 
 class ProductLoss : public LossDefault
@@ -152,4 +152,4 @@ double ProductLoss::distance(const size_t idx, const std::vector<float> &v2) con
 
 #endif
 
-} // namespace PQ
+} // namespace spq

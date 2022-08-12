@@ -12,7 +12,7 @@
 #include <inttypes.h>
 
 
-namespace PQ{
+namespace spq{
 
 using namespace util;
 
@@ -252,5 +252,5 @@ std::vector<uint8_t> ProductQuantizer<TLoss>::getCode(size_t idx)
 }
 
 
-} // namespace PQ
+} // namespace spq
 

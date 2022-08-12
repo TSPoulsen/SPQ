@@ -1,7 +1,7 @@
-#pragma once
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
 
-#include "catch.hpp"
-#include "math_utils.hpp"
+#include "spq/math_utils.hpp"
 
 #include <iostream>
 #include <set>
@@ -9,8 +9,8 @@
 
 namespace math_utils
 {
-    using namespace PQ;
-    using namespace PQ::util;
+    using namespace spq;
+    using namespace spq::util;
 
     TEST_CASE("innerProduct Test")
     {
@@ -56,7 +56,7 @@ namespace math_utils
 
     TEST_CASE("randomSample Test")
     {
-        SECTION("Actual Sample")
+        SUBCASE("Actual Sample")
         {
             size_t data_size = 1e4;
             size_t sample_size = 1e3;
@@ -64,7 +64,7 @@ namespace math_utils
             std::set<size_t> unique(sample.begin(), sample.end());
             CHECK(unique.size() == sample_size);
         }
-        SECTION("Full Sample")
+        SUBCASE("Full Sample")
         {
             size_t data_size = 1e4;
             std::vector<size_t> sample = randomSample(data_size, data_size);
@@ -73,5 +73,26 @@ namespace math_utils
         }
         std::make_pair(0,0);
 
+    }
+
+    TEST_CASE("Matrix Inverse Identity Matrix")
+    {
+        size_t n;
+        SUBCASE("N=100")
+        {
+            n = 100;
+        }
+        SUBCASE("N=100")
+        {
+            n = 1;
+        }
+        data_t identity(n, std::vector<float>(n, 0));
+        for (size_t i = 0; i < n; i++)
+        {
+            identity[i][i] = 1.0;
+        }
+
+        data_t new_identity = inverse(identity);
+        CHECK(new_identity == identity);
     }
 }

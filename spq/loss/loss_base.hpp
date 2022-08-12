@@ -11,7 +11,7 @@
 #include "math_utils.hpp"
 
 
-namespace PQ
+namespace spq
 {
     using namespace util;
 
@@ -162,4 +162,4 @@ std::vector<float> LossDefault::getCentroid(const std::vector<unsigned int> &mem
 
 #endif
 
-} // namespace PQ 
+} // namespace spq 

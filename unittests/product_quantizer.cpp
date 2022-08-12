@@ -1,5 +1,5 @@
-#pragma once
-#include "catch.hpp"
+#define doctest_config_implement_with_main
+#include <doctest.h>
 
 #include "product_quantizer.hpp"
 #include "loss/euclidean_loss.hpp"
@@ -11,8 +11,8 @@
 
 namespace product_quantizer{
 
-    using namespace PQ;
-    using namespace PQ::util;
+    using namespace spq;
+    using namespace spq::util;
 
     void show(const data_t &d)
     {

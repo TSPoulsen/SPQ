@@ -223,7 +223,7 @@ double Estimator::estimate(const size_t idx)
     double inner_product = 0.0;
     for (size_t m_index = 0u; m_index < m_; m_index++)
     {
-        inner_product += distances[k_ * m_index + static_cast<size_t>(codes[idx * m_index + m_index])];
+        inner_product += distances[k_ * m_index + static_cast<size_t>(codes[idx * m_ + m_index])];
     }
     return inner_product;
 }

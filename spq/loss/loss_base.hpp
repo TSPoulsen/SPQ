@@ -50,9 +50,7 @@ namespace spq
 size_t ILoss::padData(data_t &data)
 {
     size_t dim = data[0].size();
-    //std::cout << "padding data" << std::endl;
     padding_ = (8 - (dim % 8)) % 8;
-    //std::cout << "pad size: " << padding << std::endl; 
     for (std::vector<float> &vec : data)
     {
         for (size_t p = 0; p < padding_; p++)

@@ -18,8 +18,7 @@ using namespace util;
 
 struct Estimator
 {
-    // Cant get this one to work - i.e. only this function has access to constructor
-    //template<class TL> friend Estimator ProductQuantizer<TL>::getEstimator(const std::vector<float> &query) const;
+    // Only this ProductQuantizer has access to the constructor of Estimator
     template<class TLoss> friend class ProductQuantizer;
 
 private:
